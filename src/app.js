@@ -12,8 +12,13 @@ app.get('/', (req, res) => {
   res.json({ status: 'OJT Tracker API running' });
 });
 
-// Routes (we'll add these next)
-// app.use('/api/auth', require('./routes/auth'));
-// app.use('/api/users', require('./routes/users'));
+// Routes
+app.use('/api/auth', require('./routes/auth'));
+app.use('/api/users', require('./routes/users'));
+app.use('/api/sites', require('./routes/sites'));
+app.use('/api/buildings', require('./routes/buildings'));
+app.use('/api/shifts', require('./routes/shifts'));
+app.use('/api/employees', require('./routes/employees'));
+app.use('/api/training', require('./routes/trainingadmin'));
 
 module.exports = app;
