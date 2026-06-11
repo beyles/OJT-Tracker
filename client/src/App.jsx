@@ -9,6 +9,7 @@ import OJT from './pages/OJT'
 import Certifications from './pages/Certifications'
 import MpiRecords from './pages/MpiRecords'
 import EmployeeRecords from './pages/EmployeeRecords'
+import Staffing from './pages/Staffing'
 
 function PrivateRoute({ children }) {
   const { token } = useAuth()
@@ -28,6 +29,7 @@ function AppRoutes() {
       <Route path="/certifications" element={<PrivateRoute><Certifications /></PrivateRoute>} />
       <Route path="/mpi-records" element={<PrivateRoute><MpiRecords /></PrivateRoute>} />
       <Route path="/employee-records" element={<PrivateRoute><EmployeeRecords /></PrivateRoute>} />
+      <Route path="/staffing" element={<PrivateRoute><Staffing /></PrivateRoute>} />
       <Route path="*" element={<Navigate to={token ? "/dashboard" : "/login"} />} />
     </Routes>
   )

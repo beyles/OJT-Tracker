@@ -75,11 +75,14 @@ function UsersTab({ token }) {
     } catch (err) { console.error(err) }
   }
 
-  const filtered = users.filter(u =>
-    u.Name?.toLowerCase().includes(search.toLowerCase()) ||
-    u.Email?.toLowerCase().includes(search.toLowerCase()) ||
-    u.EmployeeID?.toLowerCase().includes(search.toLowerCase())
-  )
+  const filtered = users.filter(u => {
+    const q = search.toLowerCase()
+    return (
+      u.Name?.toLowerCase().includes(q) ||
+      u.Email?.toLowerCase().includes(q) ||
+      String(u.EmployeeID ?? '').toLowerCase().includes(q)
+    )
+  })
 
   const selectUser = (u) => { setSelected(u); setIsNew(false); setForm({ ...u, Password: '' }); setError('') }
   const openNew = () => { setSelected(null); setIsNew(true); setForm(emptyUser); setError('') }

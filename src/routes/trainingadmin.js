@@ -117,22 +117,22 @@ router.get('/workstations', async (req, res) => {
 })
 
 router.post('/workstations', async (req, res) => {
-  const { Name, Status, TrainingHours, FlightHours, WCI_Level, Competence, MpiID } = req.body
+  const { Name, Status, TrainingHours, FlightHours, WCI_Level, Competence, MpiID, CertificationExpirationDays } = req.body
   try {
     await pool.query(
-      'INSERT INTO "Workstation" ("Name", "Status", "TrainingHours", "FlightHours", "WCI_Level", "Competence", "MpiID") VALUES ($1, $2, $3, $4, $5, $6, $7)',
-      [Name, Status ?? true, TrainingHours || 0, FlightHours || 0, WCI_Level || 1, Competence || null, MpiID || null]
+      'INSERT INTO "Workstation" ("Name", "Status", "TrainingHours", "FlightHours", "WCI_Level", "Competence", "MpiID", "CertificationExpirationDays") VALUES ($1, $2, $3, $4, $5, $6, $7, $8)',
+      [Name, Status ?? true, TrainingHours || 0, FlightHours || 0, WCI_Level || 1, Competence || null, MpiID || null, CertificationExpirationDays ?? null]
     )
     res.json({ success: true })
   } catch (err) { res.status(500).json({ error: 'Error creating workstation' }) }
 })
 
 router.put('/workstations/:id', async (req, res) => {
-  const { Name, Status, TrainingHours, FlightHours, WCI_Level, Competence, MpiID } = req.body
+  const { Name, Status, TrainingHours, FlightHours, WCI_Level, Competence, MpiID, CertificationExpirationDays } = req.body
   try {
     await pool.query(
-      'UPDATE "Workstation" SET "Name"=$1, "Status"=$2, "TrainingHours"=$3, "FlightHours"=$4, "WCI_Level"=$5, "Competence"=$6, "MpiID"=$7 WHERE "ID"=$8',
-      [Name, Status, TrainingHours || 0, FlightHours || 0, WCI_Level || 1, Competence || null, MpiID || null, req.params.id]
+      'UPDATE "Workstation" SET "Name"=$1, "Status"=$2, "TrainingHours"=$3, "FlightHours"=$4, "WCI_Level"=$5, "Competence"=$6, "MpiID"=$7, "CertificationExpirationDays"=$8 WHERE "ID"=$9',
+      [Name, Status, TrainingHours || 0, FlightHours || 0, WCI_Level || 1, Competence || null, MpiID || null, CertificationExpirationDays ?? null, req.params.id]
     )
     res.json({ success: true })
   } catch (err) { res.status(500).json({ error: 'Error updating workstation' }) }
