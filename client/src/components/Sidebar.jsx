@@ -5,7 +5,10 @@ import { useAuth } from '../context/AuthContext'
 const menuItems = [
   { label: 'Dashboard', icon: '📊', path: '/dashboard', roles: ['sysadmin', 'trainingadmin', 'trainer', 'operator'] },
   { label: 'Staffing', icon: '👷', path: '/staffing', roles: ['sysadmin', 'trainingadmin', 'trainer', 'operator'] },
-  { label: 'OJT Certifications', icon: '🎓', path: '/ojt', roles: ['sysadmin', 'trainingadmin', 'trainer'] },
+  { label: 'OJT', icon: '📝', path: '/ojt', roles: ['sysadmin', 'trainingadmin', 'trainer'] },
+  { label: 'Certifications', icon: '🎓', path: '/certifications', roles: ['sysadmin', 'trainingadmin', 'trainer'] },
+  { label: 'MPI Records',      icon: '📄', path: '/mpi-records',      roles: ['sysadmin', 'trainingadmin', 'trainer'] },
+  { label: 'Training Records', icon: '🗂️', path: '/employee-records', roles: ['sysadmin', 'trainingadmin', 'trainer'] },
   { label: 'System Admin', icon: '🖥️', path: '/system-admin', roles: ['sysadmin'] },
   { label: 'Employees', icon: '👥', path: '/employees', roles: ['sysadmin'] },
   { label: 'Training Admin', icon: '📋', path: '/training-admin', roles: ['sysadmin', 'trainingadmin'] },

@@ -5,6 +5,15 @@ const multer = require('multer')
 const XLSX = require('xlsx')
 const upload = multer({ storage: multer.memoryStorage() })
 
+const photoUpload = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 2 * 1024 * 1024 },
+  fileFilter: (req, file, cb) => {
+    if (file.mimetype === 'image/jpeg' || file.mimetype === 'image/png') cb(null, true)
+    else cb(new Error('Only JPEG and PNG images are allowed'))
+  }
+})
+
 // GET employees with pagination + search
 router.get('/', async (req, res) => {
   try {
@@ -12,11 +21,17 @@ router.get('/', async (req, res) => {
     const offset = parseInt(req.query.offset) || 0
     const search = req.query.search || ''
     const searchParam = `%${search}%`
+    const activeOnly = req.query.active === 'true'
+
+    // Cast "Status" to text before comparing so this works whether the column is
+    // a PostgreSQL boolean (true::text = 'true') or a text column storing 'true'/'false'.
+    const activeClause = activeOnly ? `AND "Status"::text = 'true'` : ''
 
     const result = await pool.query(
       `SELECT "ID" as id, "Number", "Name", "Department", "Shift", "StartDate", "Status"
        FROM "Employees"
-       WHERE "Name" ILIKE $1 OR "Number" ILIKE $1 OR "Department" ILIKE $1
+       WHERE ("Name" ILIKE $1 OR "Number" ILIKE $1 OR "Department" ILIKE $1)
+       ${activeClause}
        ORDER BY "Name"
        LIMIT $2 OFFSET $3`,
       [searchParam, limit, offset]
@@ -24,7 +39,8 @@ router.get('/', async (req, res) => {
 
     const countResult = await pool.query(
       `SELECT COUNT(*) FROM "Employees"
-       WHERE "Name" ILIKE $1 OR "Number" ILIKE $1 OR "Department" ILIKE $1`,
+       WHERE ("Name" ILIKE $1 OR "Number" ILIKE $1 OR "Department" ILIKE $1)
+       ${activeClause}`,
       [searchParam]
     )
 
@@ -154,6 +170,51 @@ router.post('/upload', upload.single('file'), async (req, res) => {
   } catch (err) {
     console.error(err)
     res.status(500).json({ error: 'Error processing file' })
+  }
+})
+
+// GET employee photo
+router.get('/:id/photo', async (req, res) => {
+  try {
+    const result = await pool.query(
+      'SELECT "PhotoData", "MimeType" FROM "EmployeePhoto" WHERE "EmployeeID"=$1',
+      [req.params.id]
+    )
+    if (result.rows.length === 0) return res.status(404).json({ error: 'No photo found' })
+    const { PhotoData, MimeType } = result.rows[0]
+    res.setHeader('Content-Type', MimeType)
+    res.send(Buffer.from(PhotoData, 'base64'))
+  } catch (err) {
+    console.error(err)
+    res.status(500).json({ error: err.message })
+  }
+})
+
+// POST upload/replace employee photo
+router.post('/:id/photo', photoUpload.single('photo'), async (req, res) => {
+  if (!req.file) return res.status(400).json({ error: 'No file uploaded' })
+  const base64 = req.file.buffer.toString('base64')
+  const mimeType = req.file.mimetype
+  try {
+    const existing = await pool.query(
+      'SELECT "ID" FROM "EmployeePhoto" WHERE "EmployeeID"=$1',
+      [req.params.id]
+    )
+    if (existing.rows.length > 0) {
+      await pool.query(
+        'UPDATE "EmployeePhoto" SET "PhotoData"=$1, "MimeType"=$2, "UploadedAt"=NOW() WHERE "EmployeeID"=$3',
+        [base64, mimeType, req.params.id]
+      )
+    } else {
+      await pool.query(
+        'INSERT INTO "EmployeePhoto" ("EmployeeID", "PhotoData", "MimeType") VALUES ($1, $2, $3)',
+        [req.params.id, base64, mimeType]
+      )
+    }
+    res.json({ success: true })
+  } catch (err) {
+    console.error(err)
+    res.status(500).json({ error: err.message })
   }
 })
 

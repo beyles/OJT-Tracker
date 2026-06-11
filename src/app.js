@@ -20,5 +20,8 @@ app.use('/api/buildings', require('./routes/buildings'));
 app.use('/api/shifts', require('./routes/shifts'));
 app.use('/api/employees', require('./routes/employees'));
 app.use('/api/training', require('./routes/trainingadmin'));
+app.use('/api/ojt', require('./routes/ojt'));
+app.use('/api/certifications', require('./routes/certifications'));
+app.use('/api/mpi-records',   require('./routes/mpirecords'));
 
 module.exports = app;

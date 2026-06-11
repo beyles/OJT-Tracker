@@ -229,43 +229,55 @@ function nextAlpha(str) {
   return result.join('')
 }
 
-// Upload file for MPI
-router.post('/mpis/:id/file', upload.single('file'), async (req, res) => {
+// POST /upload or PUT — one file stored per MPI (overwrite on re-upload)
+router.post('/mpis/:id/file', upload.single('file'), handleMpiFileUpload)
+router.put('/mpis/:id/file',  upload.single('file'), handleMpiFileUpload)
+
+async function handleMpiFileUpload(req, res) {
   if (!req.file) return res.status(400).json({ error: 'No file uploaded' })
   if (req.file.mimetype !== 'application/pdf')
     return res.status(400).json({ error: 'Only PDF files allowed' })
   try {
-    const mpi = await pool.query('SELECT "Revision" FROM "Mpi" WHERE "ID"=$1', [req.params.id])
+    const mpi = await pool.query('SELECT "ID" FROM "Mpi" WHERE "ID"=$1', [req.params.id])
     if (mpi.rows.length === 0) return res.status(404).json({ error: 'MPI not found' })
+
     const base64 = req.file.buffer.toString('base64')
-    const revision = mpi.rows[0].Revision
-    const existing = await pool.query('SELECT "ID" FROM "MpiFile" WHERE "MpiID"=$1 AND "Revision"=$2', [req.params.id, revision])
+    const existing = await pool.query('SELECT "ID" FROM "MpiFile" WHERE "MpiID"=$1', [req.params.id])
+
     if (existing.rows.length > 0) {
-      await pool.query('UPDATE "MpiFile" SET "FileName"=$1, "FileSize"=$2, "FileData"=$3 WHERE "MpiID"=$4 AND "Revision"=$5',
-        [req.file.originalname, req.file.size, base64, req.params.id, revision])
+      await pool.query(
+        'UPDATE "MpiFile" SET "FileName"=$1, "FileData"=$2, "UploadedAt"=NOW() WHERE "MpiID"=$3',
+        [req.file.originalname, base64, req.params.id]
+      )
     } else {
-      await pool.query('INSERT INTO "MpiFile" ("MpiID", "Revision", "FileName", "FileSize", "FileData") VALUES ($1, $2, $3, $4, $5)',
-        [req.params.id, revision, req.file.originalname, req.file.size, base64])
+      await pool.query(
+        'INSERT INTO "MpiFile" ("MpiID", "FileName", "FileData") VALUES ($1, $2, $3)',
+        [req.params.id, req.file.originalname, base64]
+      )
     }
     res.json({ success: true, fileName: req.file.originalname })
-  } catch (err) { res.status(500).json({ error: 'Error uploading file' }) }
-})
+  } catch (err) {
+    console.error(err)
+    res.status(500).json({ error: err.message })
+  }
+}
 
 // GET file for MPI
 router.get('/mpis/:id/file', async (req, res) => {
   try {
-    const mpi = await pool.query('SELECT "Revision" FROM "Mpi" WHERE "ID"=$1', [req.params.id])
-    if (mpi.rows.length === 0) return res.status(404).json({ error: 'MPI not found' })
     const file = await pool.query(
-      'SELECT "FileName", "FileData", "FileSize" FROM "MpiFile" WHERE "MpiID"=$1 AND "Revision"=$2',
-      [req.params.id, mpi.rows[0].Revision]
+      'SELECT "FileName", "FileData" FROM "MpiFile" WHERE "MpiID"=$1',
+      [req.params.id]
     )
     if (file.rows.length === 0) return res.status(404).json({ error: 'No file found' })
     const buf = Buffer.from(file.rows[0].FileData, 'base64')
     res.setHeader('Content-Type', 'application/pdf')
     res.setHeader('Content-Disposition', `inline; filename="${file.rows[0].FileName}"`)
     res.send(buf)
-  } catch (err) { res.status(500).json({ error: 'Error retrieving file' }) }
+  } catch (err) {
+    console.error(err)
+    res.status(500).json({ error: err.message })
+  }
 })
 
 // ── LINE BUILDER ─────────────────────────────────────────────

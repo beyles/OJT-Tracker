@@ -5,6 +5,10 @@ import Dashboard from './pages/Dashboard'
 import SystemAdmin from './pages/SystemAdmin'
 import Employees from './pages/Employees'
 import TrainingAdmin from './pages/TrainingAdmin'
+import OJT from './pages/OJT'
+import Certifications from './pages/Certifications'
+import MpiRecords from './pages/MpiRecords'
+import EmployeeRecords from './pages/EmployeeRecords'
 
 function PrivateRoute({ children }) {
   const { token } = useAuth()
@@ -20,6 +24,10 @@ function AppRoutes() {
       <Route path="/system-admin" element={<PrivateRoute><SystemAdmin /></PrivateRoute>} />
       <Route path="/employees" element={<PrivateRoute><Employees /></PrivateRoute>} />
       <Route path="/training-admin" element={<PrivateRoute><TrainingAdmin /></PrivateRoute>} />
+      <Route path="/ojt" element={<PrivateRoute><OJT /></PrivateRoute>} />
+      <Route path="/certifications" element={<PrivateRoute><Certifications /></PrivateRoute>} />
+      <Route path="/mpi-records" element={<PrivateRoute><MpiRecords /></PrivateRoute>} />
+      <Route path="/employee-records" element={<PrivateRoute><EmployeeRecords /></PrivateRoute>} />
       <Route path="*" element={<Navigate to={token ? "/dashboard" : "/login"} />} />
     </Routes>
   )

@@ -23,7 +23,10 @@ export default function Employees() {
   const [total, setTotal] = useState(0)
   const [loadingMore, setLoadingMore] = useState(false)
   const [hasMore, setHasMore] = useState(true)
+  const [photoUrl, setPhotoUrl] = useState(null)
+  const [photoUploading, setPhotoUploading] = useState(false)
   const fileRef = useRef()
+  const photoRef = useRef()
   const tableRef = useRef()
   const searchTimer = useRef()
 
@@ -65,6 +68,39 @@ export default function Employees() {
     if (el) el.addEventListener('scroll', handleScroll)
     return () => { if (el) el.removeEventListener('scroll', handleScroll) }
   }, [handleScroll])
+
+  // Load photo when an employee is selected
+  useEffect(() => {
+    if (!selected || isNew) { setPhotoUrl(null); return }
+    axios.get(`http://localhost:3000/api/employees/${selected.id}/photo`, { responseType: 'blob' })
+      .then(r => setPhotoUrl(URL.createObjectURL(r.data)))
+      .catch(() => setPhotoUrl(null))
+  }, [selected?.id, isNew])
+
+  const handlePhotoUpload = async (e) => {
+    const file = e.target.files[0]
+    if (!file) return
+    if (file.size > 2 * 1024 * 1024) {
+      alert('Photo must be under 2MB')
+      photoRef.current.value = ''
+      return
+    }
+    setPhotoUploading(true)
+    const formData = new FormData()
+    formData.append('photo', file)
+    try {
+      await axios.post(`http://localhost:3000/api/employees/${selected.id}/photo`, formData, {
+        headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'multipart/form-data' }
+      })
+      const r = await axios.get(`http://localhost:3000/api/employees/${selected.id}/photo`, { responseType: 'blob' })
+      setPhotoUrl(URL.createObjectURL(r.data))
+    } catch (err) {
+      alert(err?.response?.data?.error || 'Failed to upload photo')
+    } finally {
+      setPhotoUploading(false)
+      photoRef.current.value = ''
+    }
+  }
 
   // Debounced search
   const handleSearch = (val) => {
@@ -308,6 +344,34 @@ export default function Employees() {
               <div style={{ fontSize: '15px', fontWeight: '600', color: '#111827', flex: 1 }}>{isNew ? 'New Employee' : 'Edit Employee'}</div>
               <button onClick={() => { setSelected(null); setIsNew(false) }} style={{ background: 'none', border: 'none', fontSize: '18px', color: '#9ca3af', cursor: 'pointer' }}>×</button>
             </div>
+            {/* Photo section — edit mode only */}
+            {!isNew && (
+              <div style={{ padding: '20px', borderBottom: '1px solid #e5e7eb', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '10px' }}>
+                <div style={{
+                  width: '100px', height: '100px', borderRadius: '50%',
+                  background: '#e5e7eb', overflow: 'hidden',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0
+                }}>
+                  {photoUrl
+                    ? <img src={photoUrl} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                    : <span style={{ fontSize: '34px', fontWeight: '700', color: '#9ca3af' }}>{selected?.Name?.charAt(0) || '?'}</span>
+                  }
+                </div>
+                <button
+                  onClick={() => photoRef.current.click()}
+                  disabled={photoUploading}
+                  style={{
+                    padding: '6px 14px', background: '#f3f4f6', border: '1px solid #e5e7eb',
+                    borderRadius: '6px', fontSize: '12px', fontWeight: '600', color: '#374151',
+                    cursor: photoUploading ? 'not-allowed' : 'pointer'
+                  }}
+                >
+                  {photoUploading ? 'Uploading…' : '📷 Change Photo'}
+                </button>
+                <input ref={photoRef} type="file" accept="image/jpeg,image/png" onChange={handlePhotoUpload} style={{ display: 'none' }} />
+              </div>
+            )}
+
             <div style={{ padding: '20px', flex: 1, overflowY: 'auto' }}>
               {[
                 { label: 'Employee Number', key: 'Number', type: 'text', placeholder: 'EMP-001' },
