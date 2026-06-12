@@ -19,20 +19,25 @@ router.post('/login', async (req, res) => {
       return res.status(401).json({ error: 'Invalid credentials' })
 
     const user = result.rows[0]
-    console.log('DB user:', JSON.stringify(user))
-    console.log('Password received:', password)
 
     if (!user.Status && !user.status)
       return res.status(401).json({ error: 'Account is inactive' })
 
     const storedPassword = user.PasswordHash || user.passwordhash || ''
-    console.log('Stored password:', storedPassword)
 
     if (password !== storedPassword)
       return res.status(401).json({ error: 'Invalid credentials' })
 
+    const userId = user.ID || user.id
+    const employeeId = user.EmployeeID || user.employeeid || null
+    const sitesRes = await pool.query(
+      `SELECT "SiteID" FROM "UserSites" WHERE "UserID" = $1 ORDER BY "SiteID"`,
+      [userId]
+    )
+    const siteIds = sitesRes.rows.map(r => r.SiteID)
+
     const token = jwt.sign(
-      { id: user.ID || user.id, role: user.Role || user.role, name: user.Name || user.name },
+      { id: userId, role: user.Role || user.role, name: user.Name || user.name, siteIds, employeeId },
       process.env.JWT_SECRET,
       { expiresIn: '8h' }
     )
@@ -40,10 +45,12 @@ router.post('/login', async (req, res) => {
     res.json({
       token,
       user: {
-        id: user.ID || user.id,
+        id: userId,
         name: user.Name || user.name,
         email: user.Email || user.email,
-        role: user.Role || user.role
+        role: user.Role || user.role,
+        siteIds,
+        employeeId,
       }
     })
   } catch (err) {

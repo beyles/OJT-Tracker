@@ -211,7 +211,9 @@ export default function Staffing() {
     try {
       await axios.post(`${API}/staffing/records`, {
         employeeId: foundEmp.id, workstationId: assigningRow,
-        buildingId: buildingId || null, shiftId: shiftId || null, date,
+        buildingId: buildingId ? parseInt(buildingId, 10) : null,
+        shiftId: shiftId ? parseInt(shiftId, 10) : null,
+        date,
         certificationStatus:  validation.certificationStatus,
         certificationExpired: validation.certificationStatus === 'expired',
         ojtStatus: validation.ojtStatus, mpiStatus: validation.mpiStatus, mpiVersion: validation.mpiVersion,
@@ -302,9 +304,11 @@ export default function Staffing() {
                               {isFirst ? (
                                 <>
                                   {ws.Name}
-                                  <span style={{ fontSize: '10px', fontWeight: '700', marginLeft: '6px', padding: '1px 5px', borderRadius: '3px', background: '#f3f4f6', color: '#6b7280' }}>
-                                    L{ws.WCI_Level}
-                                  </span>
+                                  {ws.IsCritical && (
+                                    <span style={{ fontSize: '10px', fontWeight: '700', marginLeft: '6px', padding: '1px 6px', borderRadius: '3px', background: '#fef2f2', color: '#ef4444' }}>
+                                      Critical
+                                    </span>
+                                  )}
                                 </>
                               ) : (
                                 // Subtle indent for continuation rows
@@ -322,7 +326,14 @@ export default function Staffing() {
                                   <PhotoCircle empId={rec.EmployeeID} name={rec.EmployeeName} size={26} />
                                   <div>
                                     <div style={{ fontSize: '13px', fontWeight: '600', color: '#111827', lineHeight: 1.2 }}>{rec.EmployeeName}</div>
-                                    <div style={{ fontSize: '11px', color: '#6b7280' }}>{rec.EmployeeNumber}</div>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                      <span style={{ fontSize: '11px', color: '#6b7280' }}>{rec.EmployeeNumber}</span>
+                                      {rec.IsTrainer && (
+                                        <span style={{ fontSize: '10px', fontWeight: '700', padding: '1px 5px', borderRadius: '3px', background: '#eff6ff', color: '#3b82f6' }}>
+                                          Trainer
+                                        </span>
+                                      )}
+                                    </div>
                                   </div>
                                 </div>
                               ) : (
@@ -547,7 +558,7 @@ function ContextSelect({ label, value, onChange, disabled, options, allLabel }) 
         style={{ ...selectStyle, opacity: disabled ? 0.45 : 1, cursor: disabled ? 'not-allowed' : 'pointer' }}
       >
         <option value="">{allLabel || '— Select —'}</option>
-        {options.map(o => <option key={o.id} value={o.id}>{o.Name || o.name}</option>)}
+        {options.map(o => { const oid = o.id ?? o.ID; return <option key={oid} value={oid}>{o.Name || o.name}</option> })}
       </select>
     </div>
   )

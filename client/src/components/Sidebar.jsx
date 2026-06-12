@@ -8,6 +8,7 @@ const menuItems = [
   { label: 'OJT', icon: '📝', path: '/ojt', roles: ['sysadmin', 'trainingadmin', 'trainer'] },
   { label: 'Certifications', icon: '🎓', path: '/certifications', roles: ['sysadmin', 'trainingadmin', 'trainer'] },
   { label: 'MPI Records',      icon: '📄', path: '/mpi-records',      roles: ['sysadmin', 'trainingadmin', 'trainer'] },
+  { label: 'Self Training',   icon: '📖', path: '/self-training',    roles: ['sysadmin', 'trainingadmin', 'trainer', 'operator'] },
   { label: 'Training Records', icon: '🗂️', path: '/employee-records', roles: ['sysadmin', 'trainingadmin', 'trainer'] },
   { label: 'System Admin', icon: '🖥️', path: '/system-admin', roles: ['sysadmin'] },
   { label: 'Employees', icon: '👥', path: '/employees', roles: ['sysadmin'] },

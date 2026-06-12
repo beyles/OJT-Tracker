@@ -25,7 +25,7 @@ router.get('/', async (req, res) => {
 
     // Cast "Status" to text before comparing so this works whether the column is
     // a PostgreSQL boolean (true::text = 'true') or a text column storing 'true'/'false'.
-    const activeClause = activeOnly ? `AND "Status"::text = 'true'` : ''
+    const activeClause = activeOnly ? `AND "Status" = true` : ''
 
     const result = await pool.query(
       `SELECT "ID" as id, "Number", "Name", "Department", "Shift", "StartDate", "Status"
@@ -170,6 +170,22 @@ router.post('/upload', upload.single('file'), async (req, res) => {
   } catch (err) {
     console.error(err)
     res.status(500).json({ error: 'Error processing file' })
+  }
+})
+
+// GET single employee by ID
+router.get('/:id', async (req, res) => {
+  try {
+    const r = await pool.query(
+      `SELECT "ID", "Number", "Name", "Department", "Shift", "StartDate", "Status"
+       FROM "Employees" WHERE "ID" = $1`,
+      [req.params.id]
+    )
+    if (r.rowCount === 0) return res.status(404).json({ error: 'Employee not found' })
+    res.json(r.rows[0])
+  } catch (err) {
+    console.error(err)
+    res.status(500).json({ error: 'Server error' })
   }
 })
 

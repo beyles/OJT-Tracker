@@ -465,7 +465,7 @@ function WorkstationsTab({ token }) {
   const [mpis, setMpis] = useState([])
   const [selected, setSelected] = useState(null)
   const [isNew, setIsNew] = useState(false)
-  const [form, setForm] = useState({ Name: '', Status: true, TrainingHours: 0, FlightHours: 0, WCI_Level: 1, Competence: '', MpiID: '', CertificationExpirationDays: null })
+  const [form, setForm] = useState({ Name: '', Status: true, TrainingHours: 0, FlightHours: 0, WCI_Level: 1, Competence: '', MpiID: '', CertificationExpirationDays: null, IsCritical: false })
   const [doesNotExpire, setDoesNotExpire] = useState(true)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
@@ -514,7 +514,7 @@ function WorkstationsTab({ token }) {
             <div style={{ fontSize: '15px', fontWeight: '600', color: '#111827', flex: 1 }}>
               Workstations <span style={{ fontSize: '12px', color: '#9ca3af', fontWeight: '400' }}>({total} total)</span>
             </div>
-            <button onClick={() => { setIsNew(true); setSelected(null); setForm({ Name: '', Status: true, TrainingHours: 0, FlightHours: 0, WCI_Level: 1, Competence: '', MpiID: '', CertificationExpirationDays: null }); setDoesNotExpire(true); setError('') }} style={btnPrimary}>+ Add Workstation</button>
+            <button onClick={() => { setIsNew(true); setSelected(null); setForm({ Name: '', Status: true, TrainingHours: 0, FlightHours: 0, WCI_Level: 1, Competence: '', MpiID: '', CertificationExpirationDays: null, IsCritical: false }); setDoesNotExpire(true); setError('') }} style={btnPrimary}>+ Add Workstation</button>
           </div>
           <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search workstations..."
             style={{ width: '100%', padding: '8px 12px', border: '1px solid #e5e7eb', borderRadius: '6px', fontSize: '13px', outline: 'none', boxSizing: 'border-box', background: '#f9fafb' }} />
@@ -528,7 +528,7 @@ function WorkstationsTab({ token }) {
               {workstations.map(w => {
                 const active = selected?.id === w.id
                 return (
-                  <tr key={w.id} onClick={() => { setSelected(w); setIsNew(false); setForm({ Name: w.Name, Status: w.Status, TrainingHours: w.TrainingHours, FlightHours: w.FlightHours, WCI_Level: w.WCI_Level, Competence: w.Competence || '', MpiID: w.MpiID || '', CertificationExpirationDays: w.CertificationExpirationDays ?? null }); setDoesNotExpire(w.CertificationExpirationDays == null); setError('') }}
+                  <tr key={w.id} onClick={() => { setSelected(w); setIsNew(false); setForm({ Name: w.Name, Status: w.Status, TrainingHours: w.TrainingHours, FlightHours: w.FlightHours, WCI_Level: w.WCI_Level, Competence: w.Competence || '', MpiID: w.MpiID || '', CertificationExpirationDays: w.CertificationExpirationDays ?? null, IsCritical: w.IsCritical ?? false }); setDoesNotExpire(w.CertificationExpirationDays == null); setError('') }}
                     style={{ cursor: 'pointer', background: active ? '#f0fdf9' : 'transparent' }}
                     onMouseEnter={e => { if (!active) e.currentTarget.style.background = '#f9fafb' }}
                     onMouseLeave={e => { if (!active) e.currentTarget.style.background = active ? '#f0fdf9' : 'transparent' }}>
@@ -609,6 +609,20 @@ function WorkstationsTab({ token }) {
               required={!doesNotExpire}
               style={{ ...inputStyle, background: doesNotExpire ? '#f3f4f6' : inputStyle.background, color: doesNotExpire ? '#9ca3af' : inputStyle.color, cursor: doesNotExpire ? 'not-allowed' : 'text' }}
             />
+          </div>
+          <div style={{ marginBottom: '14px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <input
+                type="checkbox"
+                id="isCritical"
+                checked={form.IsCritical ?? false}
+                onChange={e => setForm({ ...form, IsCritical: e.target.checked })}
+                style={{ width: '14px', height: '14px', cursor: 'pointer', accentColor: '#ef4444' }}
+              />
+              <label htmlFor="isCritical" style={{ fontSize: '13px', color: '#374151', cursor: 'pointer', fontWeight: '500' }}>
+                Critical Position
+              </label>
+            </div>
           </div>
           <div style={{ marginBottom: '14px' }}>
             <label style={labelStyle}>Status</label>

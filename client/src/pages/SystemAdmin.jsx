@@ -56,15 +56,24 @@ export default function SystemAdmin() {
 
 // ── USERS TAB ──────────────────────────────────────────────
 function UsersTab({ token }) {
-  const [users, setUsers] = useState([])
-  const [search, setSearch] = useState('')
-  const [selected, setSelected] = useState(null)
-  const [isNew, setIsNew] = useState(false)
-  const [form, setForm] = useState(emptyUser)
-  const [saving, setSaving] = useState(false)
-  const [error, setError] = useState('')
+  const [users, setUsers]         = useState([])
+  const [sites, setSites]         = useState([])
+  const [search, setSearch]       = useState('')
+  const [selected, setSelected]   = useState(null)
+  const [isNew, setIsNew]         = useState(false)
+  const [form, setForm]           = useState(emptyUser)
+  const [userSiteIds, setUserSiteIds] = useState([])  // site IDs assigned to selected user
+  const [saving, setSaving]       = useState(false)
+  const [error, setError]         = useState('')
 
   useEffect(() => { fetchUsers() }, [])
+
+  useEffect(() => {
+    // Load all sites for the assignment UI
+    axios.get('http://localhost:3000/api/sites', { headers: { Authorization: `Bearer ${token}` } })
+      .then(r => setSites(r.data || []))
+      .catch(console.error)
+  }, [])
 
   const fetchUsers = async () => {
     try {
@@ -73,6 +82,15 @@ function UsersTab({ token }) {
       })
       setUsers(res.data)
     } catch (err) { console.error(err) }
+  }
+
+  const fetchUserSites = async (userId) => {
+    try {
+      const res = await axios.get(`http://localhost:3000/api/users/${userId}/sites`, {
+        headers: { Authorization: `Bearer ${token}` }
+      })
+      setUserSiteIds((res.data || []).map(s => s.SiteID))
+    } catch { setUserSiteIds([]) }
   }
 
   const filtered = users.filter(u => {
@@ -84,16 +102,29 @@ function UsersTab({ token }) {
     )
   })
 
-  const selectUser = (u) => { setSelected(u); setIsNew(false); setForm({ ...u, Password: '' }); setError('') }
-  const openNew = () => { setSelected(null); setIsNew(true); setForm(emptyUser); setError('') }
+  const selectUser = (u) => {
+    setSelected(u); setIsNew(false); setForm({ ...u, Password: '' }); setError('')
+    fetchUserSites(u.id)
+  }
+  const openNew = () => { setSelected(null); setIsNew(true); setForm(emptyUser); setUserSiteIds([]); setError('') }
+
+  const toggleSite = (siteId) => {
+    setUserSiteIds(prev => prev.includes(siteId) ? prev.filter(id => id !== siteId) : [...prev, siteId])
+  }
 
   const handleSave = async () => {
     setSaving(true); setError('')
     try {
+      let userId = selected?.id
       if (isNew) {
-        await axios.post('http://localhost:3000/api/users', form, { headers: { Authorization: `Bearer ${token}` } })
+        const res = await axios.post('http://localhost:3000/api/users', form, { headers: { Authorization: `Bearer ${token}` } })
+        userId = res.data.id
       } else {
         await axios.put(`http://localhost:3000/api/users/${selected.id}`, form, { headers: { Authorization: `Bearer ${token}` } })
+      }
+      // Save site assignments (skip for new users if no ID returned)
+      if (userId) {
+        await axios.put(`http://localhost:3000/api/users/${userId}/sites`, { siteIds: userSiteIds }, { headers: { Authorization: `Bearer ${token}` } })
       }
       await fetchUsers()
       setSelected(null); setIsNew(false)
@@ -185,6 +216,32 @@ function UsersTab({ token }) {
                 <option value="false">Inactive</option>
               </select>
             </div>
+            {/* Site assignment */}
+            <div style={{ marginBottom: '20px' }}>
+              <label style={{ display: 'block', fontSize: '11px', fontWeight: '600', letterSpacing: '0.08em', textTransform: 'uppercase', color: '#6b7280', marginBottom: '8px' }}>Assigned Sites</label>
+              {sites.length === 0 ? (
+                <div style={{ fontSize: '12px', color: '#9ca3af' }}>No sites available</div>
+              ) : (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                  {sites.map(s => {
+                    const checked = userSiteIds.includes(s.id ?? s.ID)
+                    const sid = s.id ?? s.ID
+                    return (
+                      <label key={sid} style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', padding: '6px 10px', borderRadius: '6px', border: `1px solid ${checked ? '#00c896' : '#e5e7eb'}`, background: checked ? '#e6faf5' : '#f9fafb', fontSize: '13px', color: '#111827' }}>
+                        <input
+                          type="checkbox"
+                          checked={checked}
+                          onChange={() => toggleSite(sid)}
+                          style={{ accentColor: '#00c896' }}
+                        />
+                        {s.Name}
+                      </label>
+                    )
+                  })}
+                </div>
+              )}
+            </div>
+
             {error && <div style={{ background: '#fef2f2', border: '1px solid #fecaca', borderRadius: '6px', padding: '10px 12px', color: '#ef4444', fontSize: '13px', marginBottom: '16px' }}>{error}</div>}
           </div>
           <div style={{ padding: '16px 20px', borderTop: '1px solid #e5e7eb', display: 'flex', gap: '8px' }}>

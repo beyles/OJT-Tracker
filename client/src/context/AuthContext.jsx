@@ -25,8 +25,11 @@ export function AuthProvider({ children }) {
     setUser(null)
   }
 
+  const siteIds    = user?.siteIds    || []
+  const employeeId = user?.employeeId ?? null
+
   return (
-    <AuthContext.Provider value={{ user, token, login, logout }}>
+    <AuthContext.Provider value={{ user, token, login, logout, siteIds, employeeId }}>
       {children}
     </AuthContext.Provider>
   )

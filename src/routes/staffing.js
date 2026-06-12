@@ -28,13 +28,13 @@ router.get('/context', async (req, res) => {
   try {
     const { siteId, buildingId } = req.query
 
-    const sitesRes = await pool.query(`SELECT "ID" as id, "Name" FROM "Sites" ORDER BY "Name"`)
+    const sitesRes = await pool.query(`SELECT "ID" as id, "Name" FROM "Sites" WHERE "Status" = true ORDER BY "Name"`)
 
     let buildings = [], lines = [], shifts = []
 
     if (siteId) {
       const bRes = await pool.query(
-        `SELECT "ID" as id, "Name", "ShiftScheduleID" FROM "Buildings" WHERE "Site"=$1 ORDER BY "Name"`,
+        `SELECT "ID" as id, "Name", "ShiftScheduleID" FROM "Buildings" WHERE "Site"=$1 AND "Status" = true ORDER BY "Name"`,
         [siteId]
       )
       buildings = bRes.rows
@@ -75,7 +75,7 @@ router.get('/line-workstations', async (req, res) => {
   if (!lineId) return res.status(400).json({ error: 'lineId required' })
   try {
     const result = await pool.query(`
-      SELECT plw."Order", w."ID" as id, w."Name", w."WCI_Level", w."CertificationExpirationDays"
+      SELECT plw."Order", w."ID" as id, w."Name", w."WCI_Level", w."CertificationExpirationDays", w."IsCritical"
       FROM "ProductionLineWorkstation" plw
       JOIN "Workstation" w ON w."ID" = plw."Workstation"
       WHERE plw."ProductionLine"=$1
@@ -206,11 +206,13 @@ router.get('/records', async (req, res) => {
         lm."Version"                    AS "EmpMpiVersion",
         EXISTS(
           SELECT 1 FROM "EmployeePhoto" ep WHERE ep."EmployeeID" = sr."EmployeeID"
-        )                               AS "HasPhoto"
+        )                               AS "HasPhoto",
+        CASE WHEN u."Role" IN ('trainer', 'trainingadmin', 'sysadmin') THEN true ELSE false END AS "IsTrainer"
       FROM "StaffingRecord" sr
       JOIN  "Employees"   e   ON e."ID"  = sr."EmployeeID"
       JOIN  "Workstation" w   ON w."ID"  = sr."WorkstationID"
       LEFT JOIN "Mpi"     m   ON m."ID"  = w."MpiID"
+      LEFT JOIN "Users"   u   ON u."EmployeeID" = sr."EmployeeID"
       LEFT JOIN latest_cert lc
              ON lc."EmployeeID"    = sr."EmployeeID"
             AND lc."WorkstationID" = sr."WorkstationID"
@@ -237,6 +239,7 @@ router.get('/records', async (req, res) => {
         EmployeeNumber:      row.EmployeeNumber,
         WorkstationName:     row.WorkstationName,
         HasPhoto:            row.HasPhoto,
+        IsTrainer:           row.IsTrainer,
         CertificationStatus: cs,
         CertificationExpired: cs === 'expired',
         OJTStatus:           ojtStatus(row.OJTProgress),
@@ -266,7 +269,10 @@ router.post('/records', async (req, res) => {
       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)
       RETURNING "ID" as id
     `, [
-      employeeId, workstationId, buildingId || null, shiftId || null, date,
+      employeeId, workstationId,
+      buildingId ? parseInt(buildingId) : null,
+      shiftId    ? parseInt(shiftId)    : null,
+      date,
       certificationStatus || 'none', certificationExpired || false,
       ojt || 'none', mpi || 'none', mpiVersion || null
     ])
