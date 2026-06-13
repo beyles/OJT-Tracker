@@ -1,31 +1,25 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
+import useBreakpoint from '../hooks/useBreakpoint'
 
 const API = 'http://localhost:3000/api'
 
 export default function Topbar({ title, subtitle }) {
   const { user, token, logout } = useAuth()
+  const { isMobileOrTablet } = useBreakpoint()
   const navigate = useNavigate()
-  const [menuOpen, setMenuOpen]   = useState(false)
-  const [photoErr, setPhotoErr]   = useState(false)
+  const [menuOpen, setMenuOpen]       = useState(false)
+  const [photoErr, setPhotoErr]       = useState(false)
   const [dropPhotoErr, setDropPhotoErr] = useState(false)
 
-  const handleLogout = () => {
-    logout()
-    navigate('/login')
-  }
-
-  const goTo = (path) => {
-    setMenuOpen(false)
-    navigate(path)
-  }
+  const handleLogout = () => { logout(); navigate('/login') }
+  const goTo = (path) => { setMenuOpen(false); navigate(path) }
 
   const now  = new Date()
   const time = now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false })
   const date = now.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })
 
-  // Token passed as query param so <img src> can load it without custom headers
   const photoUrl = token ? `${API}/users/photo?token=${encodeURIComponent(token)}` : null
   const initial  = user?.name?.charAt(0) || 'U'
   const initials = (user?.name || 'U').split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2)
@@ -33,46 +27,87 @@ export default function Topbar({ title, subtitle }) {
   return (
     <div style={{
       height: '56px', background: '#ffffff', borderBottom: '1px solid #e5e7eb',
-      display: 'flex', alignItems: 'center', padding: '0 28px', gap: '16px',
-      flexShrink: 0, position: 'relative'
+      display: 'flex', alignItems: 'center',
+      padding: isMobileOrTablet ? '0 14px' : '0 28px',
+      gap: '16px', flexShrink: 0, position: 'relative',
     }}>
+
+      {/* Left — app name on mobile, page title on desktop */}
       <div style={{ flex: 1 }}>
-        <div style={{ fontSize: '15px', fontWeight: '600', color: '#111827' }}>{title}</div>
-        {subtitle && <div style={{ fontSize: '11px', color: '#9ca3af' }}>{subtitle}</div>}
+        {isMobileOrTablet ? (
+          <img src="/sparkplug-logo.png" alt="Sparkplug" style={{ height: '32px', objectFit: 'contain' }} />
+        ) : (
+          <>
+            <div style={{ fontSize: '15px', fontWeight: '600', color: '#111827' }}>{title}</div>
+            {subtitle && <div style={{ fontSize: '11px', color: '#9ca3af' }}>{subtitle}</div>}
+          </>
+        )}
       </div>
 
-      <div style={{ fontSize: '12px', color: '#9ca3af', fontFamily: 'monospace' }}>{date} · {time}</div>
+      {/* Date/time — desktop only */}
+      {!isMobileOrTablet && (
+        <div style={{ fontSize: '12px', color: '#9ca3af', fontFamily: 'monospace' }}>{date} · {time}</div>
+      )}
 
       {/* User button */}
       <div style={{ position: 'relative' }}>
-        <div
-          onClick={() => setMenuOpen(!menuOpen)}
-          style={{
-            display: 'flex', alignItems: 'center', gap: '10px',
-            padding: '6px 12px', background: menuOpen ? '#f3f4f6' : '#f9fafb',
-            borderRadius: '8px', border: '1px solid #e5e7eb',
-            cursor: 'pointer', userSelect: 'none',
-          }}
-        >
-          {/* Avatar — 32px */}
-          {photoUrl && !photoErr ? (
-            <img
-              src={photoUrl}
-              onError={() => setPhotoErr(true)}
-              alt={user?.name}
-              style={{ width: '32px', height: '32px', borderRadius: '50%', objectFit: 'cover', flexShrink: 0 }}
-            />
-          ) : (
-            <div style={{ width: '32px', height: '32px', borderRadius: '50%', background: '#00c896', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '12px', fontWeight: '700', color: '#fff', flexShrink: 0 }}>
-              {initial}
-            </div>
-          )}
-          <div>
-            <div style={{ fontSize: '13px', fontWeight: '500', color: '#111827' }}>{user?.name}</div>
-            <div style={{ fontSize: '10px', color: '#9ca3af', textTransform: 'uppercase', letterSpacing: '0.06em' }}>{user?.role}</div>
+        {isMobileOrTablet ? (
+          /* Mobile: avatar circle only */
+          <div
+            onClick={() => setMenuOpen(!menuOpen)}
+            style={{
+              width: '36px', height: '36px', borderRadius: '50%',
+              cursor: 'pointer', overflow: 'hidden', flexShrink: 0,
+              border: `2px solid ${menuOpen ? '#00c896' : '#e5e7eb'}`,
+            }}
+          >
+            {photoUrl && !photoErr ? (
+              <img
+                src={photoUrl}
+                onError={() => setPhotoErr(true)}
+                alt={user?.name}
+                style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+              />
+            ) : (
+              <div style={{
+                width: '100%', height: '100%', background: '#00c896',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                fontSize: '14px', fontWeight: '700', color: '#fff',
+              }}>
+                {initial}
+              </div>
+            )}
           </div>
-          <span style={{ fontSize: '10px', color: '#9ca3af', marginLeft: '4px' }}>▾</span>
-        </div>
+        ) : (
+          /* Desktop: full button with name + role */
+          <div
+            onClick={() => setMenuOpen(!menuOpen)}
+            style={{
+              display: 'flex', alignItems: 'center', gap: '10px',
+              padding: '6px 12px', background: menuOpen ? '#f3f4f6' : '#f9fafb',
+              borderRadius: '8px', border: '1px solid #e5e7eb',
+              cursor: 'pointer', userSelect: 'none',
+            }}
+          >
+            {photoUrl && !photoErr ? (
+              <img
+                src={photoUrl}
+                onError={() => setPhotoErr(true)}
+                alt={user?.name}
+                style={{ width: '32px', height: '32px', borderRadius: '50%', objectFit: 'cover', flexShrink: 0 }}
+              />
+            ) : (
+              <div style={{ width: '32px', height: '32px', borderRadius: '50%', background: '#00c896', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '12px', fontWeight: '700', color: '#fff', flexShrink: 0 }}>
+                {initial}
+              </div>
+            )}
+            <div>
+              <div style={{ fontSize: '13px', fontWeight: '500', color: '#111827' }}>{user?.name}</div>
+              <div style={{ fontSize: '10px', color: '#9ca3af', textTransform: 'uppercase', letterSpacing: '0.06em' }}>{user?.role}</div>
+            </div>
+            <span style={{ fontSize: '10px', color: '#9ca3af', marginLeft: '4px' }}>▾</span>
+          </div>
+        )}
 
         {/* Dropdown */}
         {menuOpen && (
@@ -104,20 +139,25 @@ export default function Topbar({ title, subtitle }) {
                 </div>
               </div>
 
-              {/* Menu items */}
-              {[
-                { icon: '👤', label: 'My Profile', action: () => goTo('/my-profile') },
-              ].map(item => (
-                <div
-                  key={item.label}
-                  onClick={item.action}
-                  style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '11px 16px', fontSize: '13px', color: '#374151', cursor: 'pointer' }}
-                  onMouseEnter={e => e.currentTarget.style.background = '#f9fafb'}
-                  onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
-                >
-                  <span>{item.icon}</span> {item.label}
-                </div>
-              ))}
+              {/* My Profile */}
+              <div
+                onClick={() => goTo('/my-profile')}
+                style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '11px 16px', fontSize: '13px', color: '#374151', cursor: 'pointer' }}
+                onMouseEnter={e => e.currentTarget.style.background = '#f9fafb'}
+                onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+              >
+                <span>👤</span> My Profile
+              </div>
+
+              {/* About Sparkplug */}
+              <div
+                onClick={() => goTo('/about')}
+                style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '11px 16px', fontSize: '13px', color: '#374151', cursor: 'pointer' }}
+                onMouseEnter={e => e.currentTarget.style.background = '#f9fafb'}
+                onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+              >
+                <span>ℹ️</span> About Sparkplug
+              </div>
 
               {/* Sign out */}
               <div style={{ borderTop: '1px solid #f3f4f6' }}>

@@ -3,6 +3,7 @@ import Layout from '../components/Layout'
 import SearchSelect from '../components/SearchSelect'
 import axios from 'axios'
 import { useAuth } from '../context/AuthContext'
+import useBreakpoint from '../hooks/useBreakpoint'
 
 const ILUO_THRESHOLDS = [
   { max: 25,  level: 'I', color: '#6b7280' },
@@ -31,6 +32,7 @@ const EMPTY_FORM = { employeeId: null, workstationId: null, progress: '', traini
 
 export default function OJT() {
   const { user } = useAuth()
+  const { isMobileOrTablet } = useBreakpoint()
   const [date, setDate] = useState(today)
   const [view, setView] = useState('mine')
   const [events, setEvents] = useState([])
@@ -125,11 +127,11 @@ export default function OJT() {
 
   return (
     <Layout title="OJT" subtitle="On-the-Job Training log">
-      <div style={{ display: 'flex', gap: '24px', height: 'calc(100vh - 56px - 56px)', minHeight: 0 }}>
+      <div style={{ display: 'flex', flexDirection: isMobileOrTablet ? 'column' : 'row', gap: '24px', height: isMobileOrTablet ? 'auto' : 'calc(100vh - 56px - 56px)', minHeight: 0 }}>
 
         {/* ── LEFT PANEL ───────────────────────────────────── */}
         <div style={{
-          width: panelOpen ? '320px' : '100%',
+          width: isMobileOrTablet ? '100%' : (panelOpen ? '320px' : '100%'),
           flexShrink: 0,
           display: 'flex', flexDirection: 'column', gap: '14px', minHeight: 0,
           transition: 'width 0.2s'
@@ -182,7 +184,7 @@ export default function OJT() {
           </button>
 
           {/* Events list */}
-          <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+          <div style={{ flex: isMobileOrTablet ? 'none' : 1, maxHeight: isMobileOrTablet ? '45vh' : undefined, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '8px' }}>
             {events.length === 0 ? (
               <div style={{ color: '#9ca3af', fontSize: '13px', textAlign: 'center', paddingTop: '40px' }}>
                 No events logged for this date.
@@ -254,7 +256,7 @@ export default function OJT() {
         {panelOpen && (
           <div style={{
             flex: 1, background: '#fff', border: '1px solid #e5e7eb',
-            borderRadius: '10px', padding: '28px', overflowY: 'auto'
+            borderRadius: '10px', padding: isMobileOrTablet ? '20px 16px' : '28px', overflowY: 'auto'
           }}>
             {/* Header */}
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>

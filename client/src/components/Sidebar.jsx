@@ -49,7 +49,10 @@ export default function Sidebar() {
         whiteSpace: 'nowrap',
         overflow: 'hidden'
       }}>
-        {!collapsed && <div style={{ fontWeight: '700', fontSize: '15px', color: '#111827' }}>OJT Tracker</div>}
+        {collapsed
+          ? <img src="/sparkplug-logo- crop.png" alt="Sparkplug" style={{ height: '36px', objectFit: 'contain' }} />
+          : <img src="/sparkplug-logo.png" alt="Sparkplug" style={{ height: '36px', objectFit: 'contain' }} />
+        }
       </div>
 
       {/* Nav items */}

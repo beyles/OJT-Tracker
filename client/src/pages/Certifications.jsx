@@ -3,6 +3,7 @@ import Layout from '../components/Layout'
 import SearchSelect from '../components/SearchSelect'
 import axios from 'axios'
 import { useAuth } from '../context/AuthContext'
+import useBreakpoint from '../hooks/useBreakpoint'
 
 const today = new Date().toISOString().split('T')[0]
 const LIMIT = 50
@@ -38,6 +39,7 @@ export default function Certifications() {
 
   const canCreate = ['sysadmin', 'trainingadmin'].includes(user?.role)
   const totalPages = Math.ceil(total / LIMIT) || 1
+  const { isMobileOrTablet } = useBreakpoint()
 
   // Load reference data once
   useEffect(() => {
@@ -102,11 +104,11 @@ export default function Certifications() {
 
   return (
     <Layout title="Certifications" subtitle="Operator certification records">
-      <div style={{ display: 'flex', gap: '24px', height: 'calc(100vh - 56px - 56px)', minHeight: 0 }}>
+      <div style={{ display: 'flex', flexDirection: isMobileOrTablet ? 'column' : 'row', gap: '24px', height: isMobileOrTablet ? 'auto' : 'calc(100vh - 56px - 56px)', minHeight: 0 }}>
 
         {/* ── LEFT PANEL ─────────────────────────────────── */}
         <div style={{
-          width: panelOpen ? '340px' : '100%',
+          width: isMobileOrTablet ? '100%' : (panelOpen ? '340px' : '100%'),
           flexShrink: 0,
           display: 'flex', flexDirection: 'column', gap: '14px', minHeight: 0,
           transition: 'width 0.2s'
@@ -144,7 +146,7 @@ export default function Certifications() {
           </div>
 
           {/* Cert cards */}
-          <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+          <div style={{ flex: isMobileOrTablet ? 'none' : 1, maxHeight: isMobileOrTablet ? '50vh' : undefined, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '8px' }}>
             {certs.map(cert => (
               <div key={cert.id} style={{
                 background: '#fff', border: '1px solid #e5e7eb', borderRadius: '8px',
@@ -223,7 +225,7 @@ export default function Certifications() {
         {panelOpen && (
           <div style={{
             flex: 1, background: '#fff', border: '1px solid #e5e7eb',
-            borderRadius: '10px', padding: '28px', overflowY: 'auto'
+            borderRadius: '10px', padding: isMobileOrTablet ? '20px 16px' : '28px', overflowY: 'auto'
           }}>
             {/* Header */}
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>

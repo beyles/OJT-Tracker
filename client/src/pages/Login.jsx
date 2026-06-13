@@ -49,9 +49,8 @@ export default function Login() {
         width: '360px',
         boxShadow: '0 4px 24px rgba(0,0,0,0.06)'
       }}>
-        <div style={{ marginBottom: '28px' }}>
-          <div style={{ fontWeight: '700', fontSize: '22px', color: '#111827' }}>OJT Tracker</div>
-          <div style={{ fontSize: '11px', color: '#9ca3af', textTransform: 'uppercase', letterSpacing: '0.08em', marginTop: '3px' }}>Manufacturing Operations</div>
+        <div style={{ marginBottom: '28px', display: 'flex', justifyContent: 'center' }}>
+          <img src="/sparkplug-logo.png" alt="Sparkplug" style={{ maxWidth: '280px', width: '100%' }} />
         </div>
 
         <div style={{ fontSize: '20px', fontWeight: '600', color: '#111827', marginBottom: '6px' }}>Sign in</div>

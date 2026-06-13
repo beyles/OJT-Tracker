@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import Layout from '../components/Layout'
 import SearchSelect from '../components/SearchSelect'
 import axios from 'axios'
+import useBreakpoint from '../hooks/useBreakpoint'
 
 const ILUO_THRESHOLDS = [
   { max: 25,  level: 'I', color: '#6b7280' },
@@ -161,6 +162,7 @@ function MpiTable({ rows }) {
 }
 
 export default function EmployeeRecords() {
+  const { isMobileOrTablet } = useBreakpoint()
   const [employees, setEmployees]   = useState([])
   const [selectedId, setSelectedId] = useState(null)
   const [selectedName, setSelectedName] = useState('')
@@ -218,7 +220,7 @@ export default function EmployeeRecords() {
 
   return (
     <Layout title="Training Records" subtitle="Full training history by employee">
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', height: 'calc(100vh - 56px - 56px)', minHeight: 0 }}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', height: isMobileOrTablet ? 'auto' : 'calc(100vh - 56px - 56px)', minHeight: 0 }}>
 
         {/* Employee selector card */}
         <div style={{ background: '#fff', border: '1px solid #e5e7eb', borderRadius: '10px', padding: '20px', flexShrink: 0 }}>
@@ -237,7 +239,7 @@ export default function EmployeeRecords() {
             )}
             <div style={{ flex: 1 }}>
               <div style={{ fontSize: '13px', fontWeight: '600', color: '#374151', marginBottom: '8px' }}>Employee</div>
-              <div style={{ maxWidth: '420px' }}>
+              <div style={{ maxWidth: isMobileOrTablet ? '100%' : '420px' }}>
                 <SearchSelect
                   value={selectedId}
                   onChange={handleEmployeeChange}
@@ -277,7 +279,8 @@ export default function EmployeeRecords() {
             <div style={{
               display: 'flex', alignItems: 'center',
               borderBottom: '1px solid #e5e7eb', padding: '0 20px',
-              flexShrink: 0, gap: '4px'
+              flexShrink: 0, gap: '4px',
+              overflowX: isMobileOrTablet ? 'auto' : 'visible',
             }}>
               <div style={{
                 fontSize: '14px', fontWeight: '700', color: '#111827',
@@ -315,7 +318,7 @@ export default function EmployeeRecords() {
             </div>
 
             {/* Table area */}
-            <div style={{ flex: 1, overflowY: 'auto' }}>
+            <div style={{ flex: 1, overflowY: 'auto', overflowX: 'auto' }}>
               {loading
                 ? <div style={{ padding: '48px', textAlign: 'center', color: '#9ca3af', fontSize: '13px' }}>Loading records…</div>
                 : <>

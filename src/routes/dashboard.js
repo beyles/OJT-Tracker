@@ -23,7 +23,22 @@ router.get('/', async (req, res) => {
   }
   const allowedSiteIds = isSysadmin ? null : userSiteIds
 
-  const today = new Date().toISOString().split('T')[0]
+  // Resolve timezone: sysadmin selecting a site → that site's TZ; otherwise user's first site TZ
+  let siteTimezone = 'America/Chicago'
+  try {
+    if (siteId) {
+      const tzRes = await pool.query('SELECT "TimeZone" FROM "Sites" WHERE "ID" = $1', [siteId])
+      if (tzRes.rows[0]?.TimeZone) siteTimezone = tzRes.rows[0].TimeZone
+    } else if (user?.id) {
+      const tzRes = await pool.query(
+        'SELECT s."TimeZone" FROM "UserSites" us JOIN "Sites" s ON s."ID" = us."SiteID" WHERE us."UserID" = $1 LIMIT 1',
+        [user.id]
+      )
+      if (tzRes.rows[0]?.TimeZone) siteTimezone = tzRes.rows[0].TimeZone
+    }
+  } catch { /* keep default */ }
+
+  const today = new Intl.DateTimeFormat('en-CA', { timeZone: siteTimezone }).format(new Date())
 
   try {
     const siteClause = (ids, alias = 'b') => {
@@ -77,9 +92,9 @@ router.get('/', async (req, res) => {
       WHERE w."CertificationExpirationDays" IS NOT NULL
         AND e."Status" = true
         AND (lc."CertDate" + (w."CertificationExpirationDays" || ' days')::interval)
-            BETWEEN CURRENT_DATE AND CURRENT_DATE + INTERVAL '30 days'
+            BETWEEN $1::date AND $1::date + INTERVAL '30 days'
       ORDER BY "ExpiryDate" LIMIT 25`
-    const expiryRes = await pool.query(q4)
+    const expiryRes = await pool.query(q4, [today])
     const expiringSoon = expiryRes.rows
 
     // 5. Active lines

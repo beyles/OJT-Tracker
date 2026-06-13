@@ -154,12 +154,7 @@ router.get('/records', async (req, res) => {
 
     if (buildingId) { params.push(buildingId); conditions.push(`sr."BuildingID" = $${params.length}`) }
     if (shiftId)    { params.push(shiftId);    conditions.push(`sr."ShiftID" = $${params.length}`) }
-    if (lineId) {
-      params.push(lineId)
-      conditions.push(`sr."WorkstationID" IN (
-        SELECT "Workstation" FROM "ProductionLineWorkstation" WHERE "ProductionLine" = $${params.length}
-      )`)
-    }
+    if (lineId) { params.push(lineId); conditions.push(`sr."LineID" = $${params.length}`) }
 
     const result = await pool.query(`
       WITH
@@ -195,6 +190,7 @@ router.get('/records', async (req, res) => {
         sr."Date",
         sr."ShiftID",
         sr."BuildingID",
+        sr."LineID",
         e."Name"                        AS "EmployeeName",
         e."Number"                      AS "EmployeeNumber",
         w."Name"                        AS "WorkstationName",
@@ -235,6 +231,7 @@ router.get('/records', async (req, res) => {
         Date:                row.Date,
         ShiftID:             row.ShiftID,
         BuildingID:          row.BuildingID,
+        LineID:              row.LineID,
         EmployeeName:        row.EmployeeName,
         EmployeeNumber:      row.EmployeeNumber,
         WorkstationName:     row.WorkstationName,
@@ -257,21 +254,22 @@ router.get('/records', async (req, res) => {
 
 // ── POST /api/staffing/records ────────────────────────────────
 router.post('/records', async (req, res) => {
-  const { employeeId, workstationId, buildingId, shiftId, date,
+  const { employeeId, workstationId, buildingId, shiftId, lineId, date,
           certificationStatus, certificationExpired, ojtStatus: ojt, mpiStatus: mpi, mpiVersion } = req.body
   if (!employeeId || !workstationId || !date)
     return res.status(400).json({ error: 'Missing required fields' })
   try {
     const result = await pool.query(`
       INSERT INTO "StaffingRecord"
-        ("EmployeeID","WorkstationID","BuildingID","ShiftID","Date",
+        ("EmployeeID","WorkstationID","BuildingID","ShiftID","LineID","Date",
          "CertificationStatus","CertificationExpired","OJTStatus","MpiStatus","MpiVersion")
-      VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)
+      VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11)
       RETURNING "ID" as id
     `, [
       employeeId, workstationId,
       buildingId ? parseInt(buildingId) : null,
       shiftId    ? parseInt(shiftId)    : null,
+      lineId     ? parseInt(lineId)     : null,
       date,
       certificationStatus || 'none', certificationExpired || false,
       ojt || 'none', mpi || 'none', mpiVersion || null

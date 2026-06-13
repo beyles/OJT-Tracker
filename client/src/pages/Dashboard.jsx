@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import Layout from '../components/Layout'
 import axios from 'axios'
 import { useAuth } from '../context/AuthContext'
+import useBreakpoint from '../hooks/useBreakpoint'
 
 const API = 'http://localhost:3000/api'
 
@@ -9,6 +10,7 @@ export default function Dashboard() {
   const { user, token, siteIds } = useAuth()
   const headers = { Authorization: `Bearer ${token}` }
   const isSysadmin = user?.role === 'sysadmin'
+  const { isMobile, isMobileOrTablet } = useBreakpoint()
 
   const [data, setData]       = useState(null)
   const [loading, setLoading] = useState(false)
@@ -44,7 +46,7 @@ export default function Dashboard() {
         )}
 
         {/* KPI Cards */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '16px' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: isMobile ? 'repeat(2, 1fr)' : 'repeat(4, 1fr)', gap: isMobile ? '10px' : '16px' }}>
           {loading && !data ? (
             Array.from({ length: 4 }).map((_, i) => (
               <div key={i} style={{ background: '#fff', border: '1px solid #e5e7eb', borderRadius: '8px', padding: '18px 20px', height: '88px', background: '#f9fafb' }} />
@@ -59,7 +61,7 @@ export default function Dashboard() {
         </div>
 
         {/* Tables row */}
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: isMobileOrTablet ? '1fr' : '1fr 1fr', gap: '16px' }}>
 
           {/* Active Lines */}
           <div style={{ background: '#fff', border: '1px solid #e5e7eb', borderRadius: '8px', overflow: 'hidden' }}>
