@@ -49,7 +49,7 @@ export default function Dashboard() {
         <div style={{ display: 'grid', gridTemplateColumns: isMobile ? 'repeat(2, 1fr)' : 'repeat(4, 1fr)', gap: isMobile ? '10px' : '16px' }}>
           {loading && !data ? (
             Array.from({ length: 4 }).map((_, i) => (
-              <div key={i} style={{ background: '#fff', border: '1px solid #e5e7eb', borderRadius: '8px', padding: '18px 20px', height: '88px', background: '#f9fafb' }} />
+              <div key={i} style={{ background: '#f9fafb', border: '1px solid #e5e7eb', borderRadius: '8px', padding: '18px 20px', height: '88px' }} />
             ))
           ) : kpis.map(kpi => (
             <div key={kpi.label} style={{ background: '#fff', border: '1px solid #e5e7eb', borderRadius: '8px', padding: '18px 20px' }}>
