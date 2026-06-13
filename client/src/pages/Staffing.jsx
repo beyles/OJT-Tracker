@@ -5,7 +5,7 @@ import axios from 'axios'
 import { useAuth } from '../context/AuthContext'
 import useBreakpoint from '../hooks/useBreakpoint'
 
-const API = 'http://localhost:3000/api'
+const API = (import.meta.env.VITE_API_URL || 'http://localhost:3000') + '/api'
 const today = new Date().toLocaleDateString('en-CA')
 
 const selectStyle = {

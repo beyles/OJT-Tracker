@@ -5,6 +5,8 @@ import axios from 'axios'
 import { useAuth } from '../context/AuthContext'
 import useBreakpoint from '../hooks/useBreakpoint'
 
+const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:3000'
+
 const today = new Date().toISOString().split('T')[0]
 const LIMIT = 50
 const EMPTY_FORM = { employeeId: null, workstationId: null, result: null, date: today }
@@ -43,10 +45,10 @@ export default function Certifications() {
 
   // Load reference data once
   useEffect(() => {
-    axios.get('http://localhost:3000/api/employees?limit=2000&active=true')
+    axios.get(`${API_BASE}/api/employees?limit=2000&active=true`)
       .then(r => setEmployees((r.data.data || []).map(e => ({ id: e.id, label: e.Name, sub: e.Number }))))
       .catch(() => {})
-    axios.get('http://localhost:3000/api/training/workstations/all')
+    axios.get(`${API_BASE}/api/training/workstations/all`)
       .then(r => setWorkstations((r.data.data || []).map(w => ({ id: w.id, label: w.Name }))))
       .catch(() => {})
   }, [])
@@ -54,7 +56,7 @@ export default function Certifications() {
   const loadCerts = () => {
     const params = new URLSearchParams({ page, limit: LIMIT })
     if (search) params.set('search', search)
-    axios.get(`http://localhost:3000/api/certifications?${params}`)
+    axios.get(`${API_BASE}/api/certifications?${params}`)
       .then(r => { setCerts(r.data.data || []); setTotal(r.data.total || 0) })
       .catch(() => {})
   }
@@ -76,7 +78,7 @@ export default function Certifications() {
     if (!canSave) return
     setSaving(true)
     try {
-      await axios.post('http://localhost:3000/api/certifications', {
+      await axios.post(`${API_BASE}/api/certifications`, {
         employeeId: form.employeeId,
         workstationId: form.workstationId,
         result: form.result,
@@ -95,7 +97,7 @@ export default function Certifications() {
   const handleDelete = async (id) => {
     if (!window.confirm('Delete this certification?')) return
     try {
-      await axios.delete(`http://localhost:3000/api/certifications/${id}`)
+      await axios.delete(`${API_BASE}/api/certifications/${id}`)
       loadCerts()
     } catch (err) {
       alert(err?.response?.data?.error || 'Failed to delete')

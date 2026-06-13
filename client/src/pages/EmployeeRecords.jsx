@@ -4,6 +4,8 @@ import SearchSelect from '../components/SearchSelect'
 import axios from 'axios'
 import useBreakpoint from '../hooks/useBreakpoint'
 
+const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:3000'
+
 const ILUO_THRESHOLDS = [
   { max: 25,  level: 'I', color: '#6b7280' },
   { max: 50,  level: 'L', color: '#f59e0b' },
@@ -174,14 +176,14 @@ export default function EmployeeRecords() {
   const [photoUrl, setPhotoUrl]     = useState(null)
 
   useEffect(() => {
-    axios.get('http://localhost:3000/api/employees?limit=2000&active=true')
+    axios.get(`${API_BASE}/api/employees?limit=2000&active=true`)
       .then(r => setEmployees((r.data.data || []).map(e => ({ id: e.id, label: e.Name, sub: e.Number }))))
       .catch(() => {})
   }, [])
 
   useEffect(() => {
     if (!selectedId) { setPhotoUrl(null); return }
-    axios.get(`http://localhost:3000/api/employees/${selectedId}/photo`, { responseType: 'blob' })
+    axios.get(`${API_BASE}/api/employees/${selectedId}/photo`, { responseType: 'blob' })
       .then(r => setPhotoUrl(URL.createObjectURL(r.data)))
       .catch(() => setPhotoUrl(null))
   }, [selectedId])
@@ -193,9 +195,9 @@ export default function EmployeeRecords() {
     }
     setLoading(true)
     Promise.all([
-      axios.get(`http://localhost:3000/api/ojt/events/by-employee?employeeId=${selectedId}`),
-      axios.get(`http://localhost:3000/api/certifications?employeeId=${selectedId}&limit=1000`),
-      axios.get(`http://localhost:3000/api/mpi-records?employeeId=${selectedId}&limit=1000`),
+      axios.get(`${API_BASE}/api/ojt/events/by-employee?employeeId=${selectedId}`),
+      axios.get(`${API_BASE}/api/certifications?employeeId=${selectedId}&limit=1000`),
+      axios.get(`${API_BASE}/api/mpi-records?employeeId=${selectedId}&limit=1000`),
     ])
       .then(([ojtRes, certsRes, mpiRes]) => {
         setOjtEvents(ojtRes.data.data || [])

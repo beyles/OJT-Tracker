@@ -4,7 +4,7 @@ import axios from 'axios'
 import { useAuth } from '../context/AuthContext'
 import * as XLSX from 'xlsx'
 
-const API = 'http://localhost:3000/api'
+const API = (import.meta.env.VITE_API_URL || 'http://localhost:3000') + '/api'
 
 const btnStyle = {
   padding: '7px 18px', borderRadius: '6px', border: 'none',

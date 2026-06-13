@@ -3,7 +3,7 @@ import Layout from '../components/Layout'
 import axios from 'axios'
 import { useAuth } from '../context/AuthContext'
 
-const API = 'http://localhost:3000/api'
+const API = (import.meta.env.VITE_API_URL || 'http://localhost:3000') + '/api'
 
 const labelStyle = {
   display: 'block', fontSize: '11px', fontWeight: '600', color: '#6b7280',

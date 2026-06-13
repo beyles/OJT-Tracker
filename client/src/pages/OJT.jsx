@@ -5,6 +5,8 @@ import axios from 'axios'
 import { useAuth } from '../context/AuthContext'
 import useBreakpoint from '../hooks/useBreakpoint'
 
+const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:3000'
+
 const ILUO_THRESHOLDS = [
   { max: 25,  level: 'I', color: '#6b7280' },
   { max: 50,  level: 'L', color: '#f59e0b' },
@@ -44,11 +46,11 @@ export default function OJT() {
   const [form, setForm] = useState(EMPTY_FORM)
 
   useEffect(() => {
-    axios.get('http://localhost:3000/api/employees?limit=2000&active=true').then(r => {
+    axios.get(`${API_BASE}/api/employees?limit=2000&active=true`).then(r => {
       setEmployees((r.data.data || []).map(e => ({ id: e.id, label: e.Name, sub: e.Number })))
     }).catch(() => {})
 
-    axios.get('http://localhost:3000/api/training/workstations/all').then(r => {
+    axios.get(`${API_BASE}/api/training/workstations/all`).then(r => {
       setWorkstations((r.data.data || []).map(w => ({ id: w.id, label: w.Name })))
     }).catch(() => {})
   }, [])
@@ -56,7 +58,7 @@ export default function OJT() {
   const loadEvents = () => {
     if (!user?.id) return
     const trainerParam = view === 'mine' ? `&trainerEmployeeId=${user.id}` : ''
-    axios.get(`http://localhost:3000/api/ojt/events?date=${date}${trainerParam}`)
+    axios.get(`${API_BASE}/api/ojt/events?date=${date}${trainerParam}`)
       .then(r => setEvents(r.data.data || []))
       .catch(() => {})
   }
@@ -89,7 +91,7 @@ export default function OJT() {
 
   const handleDelete = async (eventId) => {
     try {
-      await axios.delete(`http://localhost:3000/api/ojt/events/${eventId}?trainerId=${user.id}`)
+      await axios.delete(`${API_BASE}/api/ojt/events/${eventId}?trainerId=${user.id}`)
       loadEvents()
     } catch (err) {
       alert(err?.response?.data?.error || 'Failed to delete event')
@@ -112,9 +114,9 @@ export default function OJT() {
         notes: form.notes || null,
       }
       if (editingId) {
-        await axios.put(`http://localhost:3000/api/ojt/events/${editingId}`, payload)
+        await axios.put(`${API_BASE}/api/ojt/events/${editingId}`, payload)
       } else {
-        await axios.post('http://localhost:3000/api/ojt/events', { ...payload, date })
+        await axios.post(`${API_BASE}/api/ojt/events`, { ...payload, date })
       }
       closePanel()
       loadEvents()

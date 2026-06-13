@@ -3,6 +3,8 @@ import Layout from '../components/Layout'
 import axios from 'axios'
 import { useAuth } from '../context/AuthContext'
 
+const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:3000'
+
 const emptyEmp = { Number: '', Name: '', Department: '', Shift: '', StartDate: '', Status: true }
 const LIMIT = 50
 
@@ -41,7 +43,7 @@ export default function Employees() {
     if (loadingMore && !reset) return
     setLoadingMore(true)
     try {
-      const res = await axios.get('http://localhost:3000/api/employees', {
+      const res = await axios.get(`${API_BASE}/api/employees`, {
         headers: { Authorization: `Bearer ${token}` },
         params: { limit: LIMIT, offset: currentOffset, search: currentSearch }
       })
@@ -72,7 +74,7 @@ export default function Employees() {
   // Load photo when an employee is selected
   useEffect(() => {
     if (!selected || isNew) { setPhotoUrl(null); return }
-    axios.get(`http://localhost:3000/api/employees/${selected.id}/photo`, { responseType: 'blob' })
+    axios.get(`${API_BASE}/api/employees/${selected.id}/photo`, { responseType: 'blob' })
       .then(r => setPhotoUrl(URL.createObjectURL(r.data)))
       .catch(() => setPhotoUrl(null))
   }, [selected?.id, isNew])
@@ -89,10 +91,10 @@ export default function Employees() {
     const formData = new FormData()
     formData.append('photo', file)
     try {
-      await axios.post(`http://localhost:3000/api/employees/${selected.id}/photo`, formData, {
+      await axios.post(`${API_BASE}/api/employees/${selected.id}/photo`, formData, {
         headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'multipart/form-data' }
       })
-      const r = await axios.get(`http://localhost:3000/api/employees/${selected.id}/photo`, { responseType: 'blob' })
+      const r = await axios.get(`${API_BASE}/api/employees/${selected.id}/photo`, { responseType: 'blob' })
       setPhotoUrl(URL.createObjectURL(r.data))
     } catch (err) {
       alert(err?.response?.data?.error || 'Failed to upload photo')
@@ -112,11 +114,11 @@ export default function Employees() {
     setSaving(true); setError('')
     try {
       if (isNew) {
-        await axios.post('http://localhost:3000/api/employees', form, {
+        await axios.post(`${API_BASE}/api/employees`, form, {
           headers: { Authorization: `Bearer ${token}` }
         })
       } else {
-        await axios.put(`http://localhost:3000/api/employees/${selected.id}`, form, {
+        await axios.put(`${API_BASE}/api/employees/${selected.id}`, form, {
           headers: { Authorization: `Bearer ${token}` }
         })
       }
@@ -132,7 +134,7 @@ export default function Employees() {
 
   const handleDownloadTemplate = async () => {
     try {
-      const res = await axios.get('http://localhost:3000/api/employees/template', {
+      const res = await axios.get(`${API_BASE}/api/employees/template`, {
         headers: { Authorization: `Bearer ${token}` },
         responseType: 'blob'
       })
@@ -163,7 +165,7 @@ export default function Employees() {
     const formData = new FormData()
     formData.append('file', file)
     try {
-      const res = await axios.post('http://localhost:3000/api/employees/upload', formData, {
+      const res = await axios.post(`${API_BASE}/api/employees/upload`, formData, {
         headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'multipart/form-data' }
       })
       clearInterval(interval)

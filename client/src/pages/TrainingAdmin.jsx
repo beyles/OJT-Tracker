@@ -4,7 +4,9 @@ import axios from 'axios'
 import { useAuth } from '../context/AuthContext'
 import SearchSelect from '../components/SearchSelect'
 
-const API = 'http://localhost:3000/api/training'
+const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:3000'
+
+const API = `${API_BASE}/api/training`
 const LIMIT = 50
 
 export default function TrainingAdmin() {
@@ -370,7 +372,7 @@ function LinesTab({ token }) {
   const { items: lines, total, loading, hasMore, tableRef, reload } = useInfiniteList(fetchLines, search)
 
   useEffect(() => {
-    axios.get('http://localhost:3000/api/buildings', { headers: { Authorization: `Bearer ${token}` } })
+    axios.get(`${API_BASE}/api/buildings`, { headers: { Authorization: `Bearer ${token}` } })
       .then(r => setBuildings(r.data)).catch(console.error)
   }, [token])
 

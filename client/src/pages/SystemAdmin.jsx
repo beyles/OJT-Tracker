@@ -3,6 +3,8 @@ import Layout from '../components/Layout'
 import axios from 'axios'
 import { useAuth } from '../context/AuthContext'
 
+const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:3000'
+
 const ROLES = ['sysadmin', 'trainingadmin', 'trainer', 'operator']
 const TIMEZONES = [
   'America/New_York', 'America/Chicago', 'America/Denver', 'America/Los_Angeles',
@@ -70,14 +72,14 @@ function UsersTab({ token }) {
 
   useEffect(() => {
     // Load all sites for the assignment UI
-    axios.get('http://localhost:3000/api/sites', { headers: { Authorization: `Bearer ${token}` } })
+    axios.get(`${API_BASE}/api/sites`, { headers: { Authorization: `Bearer ${token}` } })
       .then(r => setSites(r.data || []))
       .catch(console.error)
   }, [])
 
   const fetchUsers = async () => {
     try {
-      const res = await axios.get('http://localhost:3000/api/users', {
+      const res = await axios.get(`${API_BASE}/api/users`, {
         headers: { Authorization: `Bearer ${token}` }
       })
       setUsers(res.data)
@@ -86,7 +88,7 @@ function UsersTab({ token }) {
 
   const fetchUserSites = async (userId) => {
     try {
-      const res = await axios.get(`http://localhost:3000/api/users/${userId}/sites`, {
+      const res = await axios.get(`${API_BASE}/api/users/${userId}/sites`, {
         headers: { Authorization: `Bearer ${token}` }
       })
       setUserSiteIds((res.data || []).map(s => s.SiteID))
@@ -117,14 +119,14 @@ function UsersTab({ token }) {
     try {
       let userId = selected?.id
       if (isNew) {
-        const res = await axios.post('http://localhost:3000/api/users', form, { headers: { Authorization: `Bearer ${token}` } })
+        const res = await axios.post(`${API_BASE}/api/users`, form, { headers: { Authorization: `Bearer ${token}` } })
         userId = res.data.id
       } else {
-        await axios.put(`http://localhost:3000/api/users/${selected.id}`, form, { headers: { Authorization: `Bearer ${token}` } })
+        await axios.put(`${API_BASE}/api/users/${selected.id}`, form, { headers: { Authorization: `Bearer ${token}` } })
       }
       // Save site assignments (skip for new users if no ID returned)
       if (userId) {
-        await axios.put(`http://localhost:3000/api/users/${userId}/sites`, { siteIds: userSiteIds }, { headers: { Authorization: `Bearer ${token}` } })
+        await axios.put(`${API_BASE}/api/users/${userId}/sites`, { siteIds: userSiteIds }, { headers: { Authorization: `Bearer ${token}` } })
       }
       await fetchUsers()
       setSelected(null); setIsNew(false)
@@ -269,7 +271,7 @@ function SitesTab({ token }) {
 
   const fetchSites = async () => {
     try {
-      const res = await axios.get('http://localhost:3000/api/sites', { headers: { Authorization: `Bearer ${token}` } })
+      const res = await axios.get(`${API_BASE}/api/sites`, { headers: { Authorization: `Bearer ${token}` } })
       setSites(res.data)
     } catch (err) { console.error(err) }
   }
@@ -278,9 +280,9 @@ function SitesTab({ token }) {
     setSaving(true); setError('')
     try {
       if (isNew) {
-        await axios.post('http://localhost:3000/api/sites', form, { headers: { Authorization: `Bearer ${token}` } })
+        await axios.post(`${API_BASE}/api/sites`, form, { headers: { Authorization: `Bearer ${token}` } })
       } else {
-        await axios.put(`http://localhost:3000/api/sites/${selected.id}`, form, { headers: { Authorization: `Bearer ${token}` } })
+        await axios.put(`${API_BASE}/api/sites/${selected.id}`, form, { headers: { Authorization: `Bearer ${token}` } })
       }
       await fetchSites(); setSelected(null); setIsNew(false)
     } catch (err) { setError(err.response?.data?.error || 'Error saving') }
@@ -382,21 +384,21 @@ function BuildingsTab({ token }) {
 
   const fetchBuildings = async () => {
     try {
-      const res = await axios.get('http://localhost:3000/api/buildings', { headers: { Authorization: `Bearer ${token}` } })
+      const res = await axios.get(`${API_BASE}/api/buildings`, { headers: { Authorization: `Bearer ${token}` } })
       setBuildings(res.data)
     } catch (err) { console.error(err) }
   }
 
   const fetchSites = async () => {
     try {
-      const res = await axios.get('http://localhost:3000/api/sites', { headers: { Authorization: `Bearer ${token}` } })
+      const res = await axios.get(`${API_BASE}/api/sites`, { headers: { Authorization: `Bearer ${token}` } })
       setSites(res.data)
     } catch (err) { console.error(err) }
   }
 
   const fetchSchedules = async () => {
     try {
-      const res = await axios.get('http://localhost:3000/api/shifts', { headers: { Authorization: `Bearer ${token}` } })
+      const res = await axios.get(`${API_BASE}/api/shifts`, { headers: { Authorization: `Bearer ${token}` } })
       setSchedules(res.data)
     } catch (err) { console.error(err) }
   }
@@ -405,9 +407,9 @@ function BuildingsTab({ token }) {
     setSaving(true); setError('')
     try {
       if (isNew) {
-        await axios.post('http://localhost:3000/api/buildings', form, { headers: { Authorization: `Bearer ${token}` } })
+        await axios.post(`${API_BASE}/api/buildings`, form, { headers: { Authorization: `Bearer ${token}` } })
       } else {
-        await axios.put(`http://localhost:3000/api/buildings/${selected.id}`, form, { headers: { Authorization: `Bearer ${token}` } })
+        await axios.put(`${API_BASE}/api/buildings/${selected.id}`, form, { headers: { Authorization: `Bearer ${token}` } })
       }
       await fetchBuildings(); setSelected(null); setIsNew(false)
     } catch (err) { setError(err.response?.data?.error || 'Error saving') }
@@ -533,7 +535,7 @@ function ShiftsTab({ token }) {
 
   const fetchSchedules = async () => {
     try {
-      const res = await axios.get('http://localhost:3000/api/shifts', { headers: { Authorization: `Bearer ${token}` } })
+      const res = await axios.get(`${API_BASE}/api/shifts`, { headers: { Authorization: `Bearer ${token}` } })
       setSchedules(res.data)
     } catch (err) { console.error(err) }
   }
@@ -542,9 +544,9 @@ function ShiftsTab({ token }) {
     setSaving(true); setError('')
     try {
       if (isNew) {
-        await axios.post('http://localhost:3000/api/shifts', form, { headers: { Authorization: `Bearer ${token}` } })
+        await axios.post(`${API_BASE}/api/shifts`, form, { headers: { Authorization: `Bearer ${token}` } })
       } else {
-        await axios.put(`http://localhost:3000/api/shifts/${selected.id}`, form, { headers: { Authorization: `Bearer ${token}` } })
+        await axios.put(`${API_BASE}/api/shifts/${selected.id}`, form, { headers: { Authorization: `Bearer ${token}` } })
       }
       await fetchSchedules()
       setSelected(null); setIsNew(false)
@@ -555,11 +557,11 @@ function ShiftsTab({ token }) {
   const handleAddShift = async () => {
     if (!newShift.ShiftName || !newShift.StartTime || !newShift.EndTime) return
     try {
-      await axios.post(`http://localhost:3000/api/shifts/${selected.id}/shifts`, newShift, {
+      await axios.post(`${API_BASE}/api/shifts/${selected.id}/shifts`, newShift, {
         headers: { Authorization: `Bearer ${token}` }
       })
       setNewShift({ ShiftName: '', StartTime: '', EndTime: '' })
-      const res = await axios.get('http://localhost:3000/api/shifts', { headers: { Authorization: `Bearer ${token}` } })
+      const res = await axios.get(`${API_BASE}/api/shifts`, { headers: { Authorization: `Bearer ${token}` } })
       setSchedules(res.data)
       setSelected(res.data.find(s => s.id === selected.id))
     } catch (err) { console.error(err) }
@@ -567,8 +569,8 @@ function ShiftsTab({ token }) {
 
   const handleDeleteShift = async (shiftId) => {
     try {
-      await axios.delete(`http://localhost:3000/api/shifts/shifts/${shiftId}`, { headers: { Authorization: `Bearer ${token}` } })
-      const res = await axios.get('http://localhost:3000/api/shifts', { headers: { Authorization: `Bearer ${token}` } })
+      await axios.delete(`${API_BASE}/api/shifts/shifts/${shiftId}`, { headers: { Authorization: `Bearer ${token}` } })
+      const res = await axios.get(`${API_BASE}/api/shifts`, { headers: { Authorization: `Bearer ${token}` } })
       setSchedules(res.data)
       setSelected(res.data.find(s => s.id === selected.id))
     } catch (err) { console.error(err) }

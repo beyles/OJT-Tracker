@@ -5,6 +5,8 @@ import axios from 'axios'
 import { useAuth } from '../context/AuthContext'
 import useBreakpoint from '../hooks/useBreakpoint'
 
+const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:3000'
+
 const today = new Date().toISOString().split('T')[0]
 const LIMIT = 50
 const EMPTY_FORM = { employeeId: null, mpiId: null, version: '', date: today }
@@ -44,10 +46,10 @@ export default function MpiRecords() {
 
   // Load reference data once
   useEffect(() => {
-    axios.get('http://localhost:3000/api/employees?limit=2000&active=true')
+    axios.get(`${API_BASE}/api/employees?limit=2000&active=true`)
       .then(r => setEmployees((r.data.data || []).map(e => ({ id: e.id, label: e.Name, sub: e.Number }))))
       .catch(() => {})
-    axios.get('http://localhost:3000/api/mpi-records/mpis')
+    axios.get(`${API_BASE}/api/mpi-records/mpis`)
       .then(r => setMpis((r.data.data || []).map(m => ({
         id: m.id,
         label: `${m.Code} — ${m.Name}`,
@@ -60,7 +62,7 @@ export default function MpiRecords() {
   const loadRecords = () => {
     const params = new URLSearchParams({ page, limit: LIMIT })
     if (search) params.set('search', search)
-    axios.get(`http://localhost:3000/api/mpi-records?${params}`)
+    axios.get(`${API_BASE}/api/mpi-records?${params}`)
       .then(r => { setRecords(r.data.data || []); setTotal(r.data.total || 0) })
       .catch(() => {})
   }
@@ -88,7 +90,7 @@ export default function MpiRecords() {
     if (!canSave) return
     setSaving(true)
     try {
-      await axios.post('http://localhost:3000/api/mpi-records', {
+      await axios.post(`${API_BASE}/api/mpi-records`, {
         employeeId: form.employeeId,
         mpiId:      form.mpiId,
         version:    form.version,
@@ -107,7 +109,7 @@ export default function MpiRecords() {
   const handleDelete = async (id) => {
     if (!window.confirm('Delete this MPI record?')) return
     try {
-      await axios.delete(`http://localhost:3000/api/mpi-records/${id}`)
+      await axios.delete(`${API_BASE}/api/mpi-records/${id}`)
       loadRecords()
     } catch (err) {
       alert(err?.response?.data?.error || 'Failed to delete')

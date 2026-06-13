@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import useBreakpoint from '../hooks/useBreakpoint'
 
-const API = 'http://localhost:3000/api'
+const API = (import.meta.env.VITE_API_URL || 'http://localhost:3000') + '/api'
 
 export default function Topbar({ title, subtitle }) {
   const { user, token, logout } = useAuth()
