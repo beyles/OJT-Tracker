@@ -26,5 +26,6 @@ app.use('/api/mpi-records',   require('./routes/mpirecords'));
 app.use('/api/staffing',      require('./routes/staffing'));
 app.use('/api/reports',       require('./routes/reports'));
 app.use('/api/dashboard',    require('./routes/dashboard'));
+app.use('/api/matrices',     require('./routes/matrices'));
 
 module.exports = app;

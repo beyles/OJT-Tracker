@@ -19,9 +19,11 @@ export default function Layout({ title, subtitle, children }) {
         <Topbar title={title} subtitle={subtitle} />
         <div style={{
           flex: 1,
+          display: 'flex',
+          flexDirection: 'column',
           overflowY: 'auto',
-          padding: isMobileOrTablet ? '14px 12px' : '28px',
-          paddingBottom: isMobileOrTablet ? '80px' : '28px',
+          padding: isMobileOrTablet ? '12px 10px' : '20px',
+          paddingBottom: isMobileOrTablet ? '72px' : '20px',
         }}>
           {children}
         </div>

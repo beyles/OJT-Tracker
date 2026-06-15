@@ -117,8 +117,8 @@ export default function MpiRecords() {
   }
 
   return (
-    <Layout title="MPI Records" subtitle="MPI read acknowledgment log">
-      <div style={{ display: 'flex', flexDirection: isMobileOrTablet ? 'column' : 'row', gap: '24px', height: isMobileOrTablet ? 'auto' : 'calc(100vh - 56px - 56px)', minHeight: 0 }}>
+    <Layout title="Document Records" subtitle="MPI read acknowledgment log">
+      <div style={{ display: 'flex', flexDirection: isMobileOrTablet ? 'column' : 'row', gap: '24px', flex: isMobileOrTablet ? undefined : 1, minHeight: 0 }}>
 
         {/* ── LEFT PANEL ─────────────────────────────────────── */}
         <div style={{

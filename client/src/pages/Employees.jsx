@@ -193,7 +193,7 @@ export default function Employees() {
 
   return (
     <Layout title="Employees" subtitle="Headcount Management">
-      <div style={{ display: 'flex', gap: '20px', height: 'calc(100vh - 160px)' }}>
+      <div style={{ display: 'flex', gap: '20px', flex: 1, minHeight: 0 }}>
 
         {/* Left — Employee list */}
         <div style={{ flex: 1, background: '#fff', border: '1px solid #e5e7eb', borderRadius: '8px', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>

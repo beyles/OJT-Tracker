@@ -281,6 +281,119 @@ router.post('/records', async (req, res) => {
   }
 })
 
+// ── GET /api/staffing/matrix?lineId=&shiftId=&date= ──────────
+router.get('/matrix', async (req, res) => {
+  const { lineId, shiftId, date } = req.query
+  if (!lineId || !shiftId || !date) return res.status(400).json({ error: 'lineId, shiftId, and date required' })
+  try {
+    const [lineRes, shiftRes] = await Promise.all([
+      pool.query(`SELECT "ProductionLineName" AS "Name" FROM "ProductionLine" WHERE "ID"=$1`, [lineId]),
+      pool.query(`SELECT "ShiftName" AS "Name" FROM "ShiftScheduleDetail" WHERE "ID"=$1`, [shiftId])
+    ])
+    if (!lineRes.rows[0]) return res.status(404).json({ error: 'Line not found' })
+    if (!shiftRes.rows[0]) return res.status(404).json({ error: 'Shift not found' })
+
+    const lineName  = lineRes.rows[0].Name
+    const shiftName = shiftRes.rows[0].Name
+
+    const wsRes = await pool.query(`
+      SELECT plw."Order", w."ID" as id, w."Name", w."CertificationExpirationDays", w."MpiID", w."IsCritical", m."Revision" AS "CurrentRevision"
+      FROM "ProductionLineWorkstation" plw
+      JOIN "Workstation" w ON w."ID" = plw."Workstation"
+      LEFT JOIN "Mpi" m ON m."ID" = w."MpiID"
+      WHERE plw."ProductionLine" = $1
+      ORDER BY plw."Order"
+    `, [lineId])
+
+    const workstations = wsRes.rows.map(w => ({ id: w.id, name: w.Name, isCritical: !!w.IsCritical, hasMpi: !!w.MpiID }))
+    if (workstations.length === 0) return res.json({ lineName, shiftName, workstations: [], employees: [] })
+
+    const empRes = await pool.query(`
+      SELECT DISTINCT e."ID" as id, e."Name", e."Number",
+        EXISTS(SELECT 1 FROM "Users" u WHERE u."EmployeeID" = e."ID" AND u."Role" IN ('trainer','trainingadmin','sysadmin')) AS "IsTrainer"
+      FROM "StaffingRecord" sr
+      JOIN "Employees" e ON e."ID" = sr."EmployeeID"
+      WHERE sr."LineID" = $1 AND sr."ShiftID" = $2 AND sr."Date" = $3
+      ORDER BY e."Name"
+    `, [lineId, shiftId, date])
+
+    const employees = empRes.rows
+    if (employees.length === 0) return res.json({ lineName, shiftName, workstations, employees: [] })
+
+    const employeeIds    = employees.map(e => e.id)
+    const workstationIds = wsRes.rows.map(w => w.id)
+
+    const [certRes, ojtRes, mpiRes, assignedRes] = await Promise.all([
+      pool.query(`
+        SELECT DISTINCT ON (c."EmployeeID", c."WorkstationID")
+          c."EmployeeID", c."WorkstationID", c."Date" AS "CertDate"
+        FROM "Certifications" c
+        WHERE c."Result" = 'Pass' AND c."EmployeeID" = ANY($1) AND c."WorkstationID" = ANY($2)
+        ORDER BY c."EmployeeID", c."WorkstationID", c."Date" DESC
+      `, [employeeIds, workstationIds]),
+
+      pool.query(`
+        SELECT DISTINCT ON (o."Employee", o."Workstation")
+          o."Employee" AS "EmployeeID", o."Workstation" AS "WorkstationID", o."Progress"
+        FROM "OJT" o
+        WHERE o."Employee" = ANY($1) AND o."Workstation" = ANY($2)
+        ORDER BY o."Employee", o."Workstation", o."EventDate" DESC
+      `, [employeeIds, workstationIds]),
+
+      pool.query(`
+        SELECT DISTINCT ON (mr."EmployeeID", mr."MpiID")
+          mr."EmployeeID", mr."MpiID", mr."Version"
+        FROM "MpiRecord" mr
+        WHERE mr."EmployeeID" = ANY($1)
+        ORDER BY mr."EmployeeID", mr."MpiID", mr."Date" DESC
+      `, [employeeIds]),
+
+      pool.query(`
+        SELECT sr."EmployeeID", sr."WorkstationID"
+        FROM "StaffingRecord" sr
+        WHERE sr."LineID" = $1 AND sr."ShiftID" = $2 AND sr."Date" = $3
+      `, [lineId, shiftId, date])
+    ])
+
+    const certMap = {}
+    certRes.rows.forEach(r => { certMap[`${r.EmployeeID}-${r.WorkstationID}`] = r.CertDate })
+
+    const ojtMap = {}
+    ojtRes.rows.forEach(r => { ojtMap[`${r.EmployeeID}-${r.WorkstationID}`] = r.Progress })
+
+    const mpiMap = {}
+    mpiRes.rows.forEach(r => { mpiMap[`${r.EmployeeID}-${r.MpiID}`] = r.Version })
+
+    const assignedSet = new Set()
+    assignedRes.rows.forEach(r => { assignedSet.add(`${r.EmployeeID}-${r.WorkstationID}`) })
+
+    const wsMeta = {}
+    wsRes.rows.forEach(w => { wsMeta[w.id] = { certExpDays: w.CertificationExpirationDays, mpiId: w.MpiID, currentRevision: w.CurrentRevision } })
+
+    const result = employees.map(emp => {
+      const wsData = {}
+      for (const ws of wsRes.rows) {
+        const key  = `${emp.id}-${ws.id}`
+        const meta = wsMeta[ws.id]
+        const cert = certStatus(certMap[key] || null, meta.certExpDays, date)
+        const ojtRaw = ojtMap[key] != null ? Number(ojtMap[key]) : null
+        let mpi = 'none'
+        if (meta.mpiId) {
+          const empVer = mpiMap[`${emp.id}-${meta.mpiId}`] ?? null
+          mpi = mpiStatus(empVer, meta.currentRevision, meta.mpiId)
+        }
+        wsData[ws.id] = { assigned: assignedSet.has(key), cert, ojt: ojtRaw, mpi }
+      }
+      return { id: emp.id, name: emp.Name, number: emp.Number, isTrainer: emp.IsTrainer || false, workstations: wsData }
+    })
+
+    res.json({ lineName, shiftName, generatedAt: new Date().toISOString(), workstations, employees: result })
+  } catch (err) {
+    console.error(err)
+    res.status(500).json({ error: err.message })
+  }
+})
+
 // ── DELETE /api/staffing/records/:id ─────────────────────────
 router.delete('/records/:id', async (req, res) => {
   try {

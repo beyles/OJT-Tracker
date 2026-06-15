@@ -15,34 +15,38 @@ export default function TrainingAdmin() {
 
   return (
     <Layout title="Training Admin" subtitle="Training Configuration">
-      <div style={{ display: 'flex', borderBottom: '2px solid #e5e7eb', marginBottom: '24px', gap: '4px' }}>
-        {[
-          { key: 'mpis', label: 'Documents (MPIs)' },
-          { key: 'lines', label: 'Production Lines' },
-          { key: 'workstations', label: 'Workstations' },
-          { key: 'linebuilder', label: 'Line Builder' },
-          { key: 'competences', label: 'Competences' },
-        ].map(t => (
-          <div key={t.key} onClick={() => setTab(t.key)} style={{
-            padding: '10px 24px', fontSize: '14px', fontWeight: '600', cursor: 'pointer',
-            color: tab === t.key ? '#00c896' : '#6b7280',
-            borderBottom: tab === t.key ? '2px solid #00c896' : '2px solid transparent',
-            marginBottom: '-2px', transition: 'all 0.15s'
-          }}>{t.label}</div>
-        ))}
+      <div style={{ display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0 }}>
+        <div style={{ display: 'flex', borderBottom: '2px solid #e5e7eb', marginBottom: '14px', gap: '4px', flexShrink: 0 }}>
+          {[
+            { key: 'mpis', label: 'Documents (MPIs)' },
+            { key: 'lines', label: 'Production Lines' },
+            { key: 'workstations', label: 'Workstations' },
+            { key: 'linebuilder', label: 'Line Builder' },
+            { key: 'competences', label: 'Competences' },
+          ].map(t => (
+            <div key={t.key} onClick={() => setTab(t.key)} style={{
+              padding: '8px 16px', fontSize: '14px', fontWeight: '600', cursor: 'pointer',
+              color: tab === t.key ? '#00c896' : '#6b7280',
+              borderBottom: tab === t.key ? '2px solid #00c896' : '2px solid transparent',
+              marginBottom: '-2px', transition: 'all 0.15s'
+            }}>{t.label}</div>
+          ))}
+        </div>
+        <div style={{ flex: 1, minHeight: 0, overflow: 'hidden' }}>
+          {tab === 'mpis' && <MpisTab token={token} />}
+          {tab === 'lines' && <LinesTab token={token} />}
+          {tab === 'workstations' && <WorkstationsTab token={token} />}
+          {tab === 'linebuilder' && <LineBuilderTab token={token} />}
+          {tab === 'competences' && <CompetencesTab token={token} />}
+        </div>
       </div>
-      {tab === 'mpis' && <MpisTab token={token} />}
-      {tab === 'lines' && <LinesTab token={token} />}
-      {tab === 'workstations' && <WorkstationsTab token={token} />}
-      {tab === 'linebuilder' && <LineBuilderTab token={token} />}
-      {tab === 'competences' && <CompetencesTab token={token} />}
     </Layout>
   )
 }
 
 // ── SHARED STYLES ──────────────────────────────────────────
-const thStyle = { textAlign: 'left', padding: '10px 20px', fontSize: '11px', fontWeight: '600', letterSpacing: '0.08em', textTransform: 'uppercase', color: '#9ca3af', borderBottom: '1px solid #e5e7eb', whiteSpace: 'nowrap', background: '#fff' }
-const labelStyle = { display: 'block', fontSize: '11px', fontWeight: '600', letterSpacing: '0.08em', textTransform: 'uppercase', color: '#6b7280', marginBottom: '6px' }
+const thStyle = { textAlign: 'left', padding: '7px 14px', fontSize: '11px', fontWeight: '600', letterSpacing: '0.08em', textTransform: 'uppercase', color: '#9ca3af', borderBottom: '1px solid #e5e7eb', whiteSpace: 'nowrap', background: '#fff' }
+const labelStyle = { display: 'block', fontSize: '11px', fontWeight: '600', letterSpacing: '0.08em', textTransform: 'uppercase', color: '#6b7280', marginBottom: '4px' }
 const inputStyle = { width: '100%', padding: '9px 12px', border: '1px solid #e5e7eb', borderRadius: '6px', fontSize: '13px', outline: 'none', boxSizing: 'border-box', background: '#f9fafb' }
 const btnPrimary = { padding: '8px 16px', background: '#00c896', border: 'none', borderRadius: '6px', color: '#fff', fontWeight: '600', fontSize: '13px', cursor: 'pointer' }
 const btnGhost = { padding: '8px 14px', background: '#f3f4f6', border: 'none', borderRadius: '6px', color: '#374151', fontWeight: '600', fontSize: '13px', cursor: 'pointer' }
@@ -54,13 +58,13 @@ function StatusBadge({ value }) {
 function Panel({ title, onClose, onSave, saving, error, children }) {
   return (
     <div style={{ width: '340px', background: '#fff', border: '1px solid #e5e7eb', borderRadius: '8px', display: 'flex', flexDirection: 'column', flexShrink: 0 }}>
-      <div style={{ padding: '16px 20px', borderBottom: '1px solid #e5e7eb', display: 'flex', alignItems: 'center' }}>
+      <div style={{ padding: '12px 16px', borderBottom: '1px solid #e5e7eb', display: 'flex', alignItems: 'center' }}>
         <div style={{ fontSize: '15px', fontWeight: '600', color: '#111827', flex: 1 }}>{title}</div>
         <button onClick={onClose} style={{ background: 'none', border: 'none', fontSize: '18px', color: '#9ca3af', cursor: 'pointer' }}>×</button>
       </div>
-      <div style={{ padding: '20px', flex: 1, overflowY: 'auto' }}>{children}</div>
-      {error && <div style={{ margin: '0 20px 12px', background: '#fef2f2', border: '1px solid #fecaca', borderRadius: '6px', padding: '10px 12px', color: '#ef4444', fontSize: '13px' }}>{error}</div>}
-      <div style={{ padding: '16px 20px', borderTop: '1px solid #e5e7eb', display: 'flex', gap: '8px' }}>
+      <div style={{ padding: '14px 16px', flex: 1, overflowY: 'auto' }}>{children}</div>
+      {error && <div style={{ margin: '0 16px 10px', background: '#fef2f2', border: '1px solid #fecaca', borderRadius: '6px', padding: '8px 12px', color: '#ef4444', fontSize: '13px' }}>{error}</div>}
+      <div style={{ padding: '12px 16px', borderTop: '1px solid #e5e7eb', display: 'flex', gap: '8px' }}>
         <button onClick={onSave} disabled={saving} style={{ ...btnPrimary, flex: 1, justifyContent: 'center' }}>{saving ? 'Saving...' : 'Save'}</button>
         <button onClick={onClose} style={btnGhost}>Cancel</button>
       </div>
@@ -211,7 +215,7 @@ function MpisTab({ token }) {
   const panelOpen = selected || isNew
 
   return (
-    <div style={{ display: 'flex', gap: '20px', height: 'calc(100vh - 200px)' }}>
+    <div style={{ display: 'flex', gap: '20px', height: '100%' }}>
       <div style={{ flex: 1, background: '#fff', border: '1px solid #e5e7eb', borderRadius: '8px', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
         <div style={{ padding: '16px 20px', borderBottom: '1px solid #e5e7eb' }}>
           <div style={{ display: 'flex', alignItems: 'center', marginBottom: '12px' }}>
@@ -235,11 +239,11 @@ function MpisTab({ token }) {
                   <tr key={m.id} onClick={() => selectMpi(m)} style={{ cursor: 'pointer', background: active ? '#f0fdf9' : 'transparent' }}
                     onMouseEnter={e => { if (!active) e.currentTarget.style.background = '#f9fafb' }}
                     onMouseLeave={e => { if (!active) e.currentTarget.style.background = active ? '#f0fdf9' : 'transparent' }}>
-                    <td style={{ padding: '11px 20px', borderBottom: '1px solid #f3f4f6', fontFamily: 'monospace', fontWeight: '600', color: '#111827' }}>{m.Code}</td>
-                    <td style={{ padding: '11px 20px', borderBottom: '1px solid #f3f4f6', color: '#111827' }}>{m.Name}</td>
-                    <td style={{ padding: '11px 20px', borderBottom: '1px solid #f3f4f6', color: '#6b7280', fontFamily: 'monospace' }}>{m.Revision}</td>
-                    <td style={{ padding: '11px 20px', borderBottom: '1px solid #f3f4f6', color: '#6b7280' }}>{m.VersioningType}</td>
-                    <td style={{ padding: '11px 20px', borderBottom: '1px solid #f3f4f6' }}><StatusBadge value={m.Status} /></td>
+                    <td style={{ padding: '7px 14px', borderBottom: '1px solid #f3f4f6', fontFamily: 'monospace', fontWeight: '600', color: '#111827' }}>{m.Code}</td>
+                    <td style={{ padding: '7px 14px', borderBottom: '1px solid #f3f4f6', color: '#111827' }}>{m.Name}</td>
+                    <td style={{ padding: '7px 14px', borderBottom: '1px solid #f3f4f6', color: '#6b7280', fontFamily: 'monospace' }}>{m.Revision}</td>
+                    <td style={{ padding: '7px 14px', borderBottom: '1px solid #f3f4f6', color: '#6b7280' }}>{m.VersioningType}</td>
+                    <td style={{ padding: '7px 14px', borderBottom: '1px solid #f3f4f6' }}><StatusBadge value={m.Status} /></td>
                   </tr>
                 )
               })}
@@ -392,7 +396,7 @@ function LinesTab({ token }) {
   const panelOpen = selected || isNew
 
   return (
-    <div style={{ display: 'flex', gap: '20px', height: 'calc(100vh - 200px)' }}>
+    <div style={{ display: 'flex', gap: '20px', height: '100%' }}>
       <div style={{ flex: 1, background: '#fff', border: '1px solid #e5e7eb', borderRadius: '8px', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
         <div style={{ padding: '16px 20px', borderBottom: '1px solid #e5e7eb' }}>
           <div style={{ display: 'flex', alignItems: 'center', marginBottom: '12px' }}>
@@ -417,9 +421,9 @@ function LinesTab({ token }) {
                     style={{ cursor: 'pointer', background: active ? '#f0fdf9' : 'transparent' }}
                     onMouseEnter={e => { if (!active) e.currentTarget.style.background = '#f9fafb' }}
                     onMouseLeave={e => { if (!active) e.currentTarget.style.background = active ? '#f0fdf9' : 'transparent' }}>
-                    <td style={{ padding: '11px 20px', borderBottom: '1px solid #f3f4f6', fontWeight: '500', color: '#111827' }}>{l.Name}</td>
-                    <td style={{ padding: '11px 20px', borderBottom: '1px solid #f3f4f6', color: '#6b7280' }}>{l.BuildingName}</td>
-                    <td style={{ padding: '11px 20px', borderBottom: '1px solid #f3f4f6' }}><StatusBadge value={l.Status} /></td>
+                    <td style={{ padding: '7px 14px', borderBottom: '1px solid #f3f4f6', fontWeight: '500', color: '#111827' }}>{l.Name}</td>
+                    <td style={{ padding: '7px 14px', borderBottom: '1px solid #f3f4f6', color: '#6b7280' }}>{l.BuildingName}</td>
+                    <td style={{ padding: '7px 14px', borderBottom: '1px solid #f3f4f6' }}><StatusBadge value={l.Status} /></td>
                   </tr>
                 )
               })}
@@ -509,7 +513,7 @@ function WorkstationsTab({ token }) {
   const panelOpen = selected || isNew
 
   return (
-    <div style={{ display: 'flex', gap: '20px', height: 'calc(100vh - 200px)' }}>
+    <div style={{ display: 'flex', gap: '20px', height: '100%' }}>
       <div style={{ flex: 1, background: '#fff', border: '1px solid #e5e7eb', borderRadius: '8px', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
         <div style={{ padding: '16px 20px', borderBottom: '1px solid #e5e7eb' }}>
           <div style={{ display: 'flex', alignItems: 'center', marginBottom: '12px' }}>
@@ -534,14 +538,14 @@ function WorkstationsTab({ token }) {
                     style={{ cursor: 'pointer', background: active ? '#f0fdf9' : 'transparent' }}
                     onMouseEnter={e => { if (!active) e.currentTarget.style.background = '#f9fafb' }}
                     onMouseLeave={e => { if (!active) e.currentTarget.style.background = active ? '#f0fdf9' : 'transparent' }}>
-                    <td style={{ padding: '11px 20px', borderBottom: '1px solid #f3f4f6', fontWeight: '500', color: '#111827' }}>{w.Name}</td>
-                    <td style={{ padding: '11px 20px', borderBottom: '1px solid #f3f4f6' }}>
+                    <td style={{ padding: '7px 14px', borderBottom: '1px solid #f3f4f6', fontWeight: '500', color: '#111827' }}>{w.Name}</td>
+                    <td style={{ padding: '7px 14px', borderBottom: '1px solid #f3f4f6' }}>
                       <span style={{ fontSize: '11px', fontWeight: '700', padding: '2px 8px', borderRadius: '20px', background: `${wciColors[w.WCI_Level]}20`, color: wciColors[w.WCI_Level] }}>L{w.WCI_Level}</span>
                     </td>
-                    <td style={{ padding: '11px 20px', borderBottom: '1px solid #f3f4f6', color: '#6b7280', fontFamily: 'monospace' }}>{w.TrainingHours}h</td>
-                    <td style={{ padding: '11px 20px', borderBottom: '1px solid #f3f4f6', color: '#6b7280' }}>{w.CompetenceName || '—'}</td>
-                    <td style={{ padding: '11px 20px', borderBottom: '1px solid #f3f4f6', color: '#6b7280', fontFamily: 'monospace', fontSize: '12px' }}>{w.MpiCode || '—'}</td>
-                    <td style={{ padding: '11px 20px', borderBottom: '1px solid #f3f4f6' }}><StatusBadge value={w.Status} /></td>
+                    <td style={{ padding: '7px 14px', borderBottom: '1px solid #f3f4f6', color: '#6b7280', fontFamily: 'monospace' }}>{w.TrainingHours}h</td>
+                    <td style={{ padding: '7px 14px', borderBottom: '1px solid #f3f4f6', color: '#6b7280' }}>{w.CompetenceName || '—'}</td>
+                    <td style={{ padding: '7px 14px', borderBottom: '1px solid #f3f4f6', color: '#6b7280', fontFamily: 'monospace', fontSize: '12px' }}>{w.MpiCode || '—'}</td>
+                    <td style={{ padding: '7px 14px', borderBottom: '1px solid #f3f4f6' }}><StatusBadge value={w.Status} /></td>
                   </tr>
                 )
               })}
@@ -724,7 +728,7 @@ function LineBuilderTab({ token }) {
   const wciColors = { 1: '#00c896', 2: '#3b82f6', 3: '#f59e0b', 4: '#ef4444' }
 
   return (
-    <div style={{ height: 'calc(100vh - 200px)', display: 'flex', flexDirection: 'column', gap: '16px' }}>
+    <div style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: '16px' }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
         <div style={{ minWidth: '320px' }}>
           <SearchSelect
@@ -847,7 +851,7 @@ function CompetencesTab({ token }) {
   const panelOpen = selected || isNew
 
   return (
-    <div style={{ display: 'flex', gap: '20px', height: 'calc(100vh - 200px)' }}>
+    <div style={{ display: 'flex', gap: '20px', height: '100%' }}>
       <div style={{ flex: 1, background: '#fff', border: '1px solid #e5e7eb', borderRadius: '8px', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
         <div style={{ padding: '16px 20px', borderBottom: '1px solid #e5e7eb', display: 'flex', alignItems: 'center' }}>
           <div style={{ fontSize: '15px', fontWeight: '600', color: '#111827', flex: 1 }}>Competences</div>
@@ -864,9 +868,9 @@ function CompetencesTab({ token }) {
                     style={{ cursor: 'pointer', background: active ? '#f0fdf9' : 'transparent' }}
                     onMouseEnter={e => { if (!active) e.currentTarget.style.background = '#f9fafb' }}
                     onMouseLeave={e => { if (!active) e.currentTarget.style.background = 'transparent' }}>
-                    <td style={{ padding: '11px 20px', borderBottom: '1px solid #f3f4f6', color: '#6b7280', fontFamily: 'monospace' }}>{c.Order}</td>
-                    <td style={{ padding: '11px 20px', borderBottom: '1px solid #f3f4f6', fontWeight: '500', color: '#111827' }}>{c.Name}</td>
-                    <td style={{ padding: '11px 20px', borderBottom: '1px solid #f3f4f6' }}><StatusBadge value={c.Status} /></td>
+                    <td style={{ padding: '7px 14px', borderBottom: '1px solid #f3f4f6', color: '#6b7280', fontFamily: 'monospace' }}>{c.Order}</td>
+                    <td style={{ padding: '7px 14px', borderBottom: '1px solid #f3f4f6', fontWeight: '500', color: '#111827' }}>{c.Name}</td>
+                    <td style={{ padding: '7px 14px', borderBottom: '1px solid #f3f4f6' }}><StatusBadge value={c.Status} /></td>
                   </tr>
                 )
               })}

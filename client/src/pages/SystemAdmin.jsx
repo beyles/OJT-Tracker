@@ -19,39 +19,42 @@ export default function SystemAdmin() {
 
   return (
     <Layout title="System Admin" subtitle="System Configuration & User Management">
-      {/* Tabs */}
-      <div style={{ display: 'flex', borderBottom: '2px solid #e5e7eb', marginBottom: '24px', gap: '4px' }}>
-        {[
-          { key: 'users', label: 'Users' },
-          { key: 'sites', label: 'Sites' },
-          { key: 'buildings', label: 'Buildings' },
-          { key: 'shifts', label: 'Shift Schedules' },
-          { key: 'system', label: 'System' },
-        ].map(t => (
-          <div
-            key={t.key}
-            onClick={() => setTab(t.key)}
-            style={{
-              padding: '10px 24px',
-              fontSize: '14px',
-              fontWeight: '600',
-              cursor: 'pointer',
-              color: tab === t.key ? '#00c896' : '#6b7280',
-              borderBottom: tab === t.key ? '2px solid #00c896' : '2px solid transparent',
-              marginBottom: '-2px',
-              transition: 'all 0.15s'
-            }}
-          >
-            {t.label}
-          </div>
-        ))}
+      <div style={{ display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0 }}>
+        {/* Tabs */}
+        <div style={{ display: 'flex', borderBottom: '2px solid #e5e7eb', marginBottom: '14px', gap: '4px', flexShrink: 0 }}>
+          {[
+            { key: 'users', label: 'Users' },
+            { key: 'sites', label: 'Sites' },
+            { key: 'buildings', label: 'Buildings' },
+            { key: 'shifts', label: 'Shift Schedules' },
+            { key: 'system', label: 'System' },
+          ].map(t => (
+            <div
+              key={t.key}
+              onClick={() => setTab(t.key)}
+              style={{
+                padding: '8px 16px',
+                fontSize: '14px',
+                fontWeight: '600',
+                cursor: 'pointer',
+                color: tab === t.key ? '#00c896' : '#6b7280',
+                borderBottom: tab === t.key ? '2px solid #00c896' : '2px solid transparent',
+                marginBottom: '-2px',
+                transition: 'all 0.15s'
+              }}
+            >
+              {t.label}
+            </div>
+          ))}
+        </div>
+        <div style={{ flex: 1, minHeight: 0, overflow: 'hidden' }}>
+          {tab === 'users' && <UsersTab token={token} />}
+          {tab === 'sites' && <SitesTab token={token} />}
+          {tab === 'buildings' && <BuildingsTab token={token} />}
+          {tab === 'shifts' && <ShiftsTab token={token} />}
+          {tab === 'system' && <SystemTab />}
+        </div>
       </div>
-
-      {tab === 'users' && <UsersTab token={token} />}
-      {tab === 'sites' && <SitesTab token={token} />}
-      {tab === 'buildings' && <BuildingsTab token={token} />}
-      {tab === 'shifts' && <ShiftsTab token={token} />}
-      {tab === 'system' && <SystemTab />}
     </Layout>
   )
 }
@@ -138,20 +141,20 @@ function UsersTab({ token }) {
   const panelOpen = selected || isNew
 
   return (
-    <div style={{ display: 'flex', gap: '20px', height: 'calc(100vh - 200px)' }}>
+    <div style={{ display: 'flex', gap: '20px', height: '100%' }}>
       <div style={{ flex: 1, background: '#fff', border: '1px solid #e5e7eb', borderRadius: '8px', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
         <div style={{ padding: '16px 20px', borderBottom: '1px solid #e5e7eb', display: 'flex', alignItems: 'center', gap: '12px' }}>
           <div style={{ fontSize: '15px', fontWeight: '600', color: '#111827', flex: 1 }}>Users <span style={{ fontSize: '12px', color: '#9ca3af', fontWeight: '400' }}>({filtered.length})</span></div>
           <button onClick={openNew} style={{ padding: '8px 16px', background: '#00c896', border: 'none', borderRadius: '6px', color: '#fff', fontWeight: '600', fontSize: '13px', cursor: 'pointer' }}>+ Add User</button>
         </div>
-        <div style={{ padding: '12px 20px', borderBottom: '1px solid #f3f4f6' }}>
+        <div style={{ padding: '7px 14px', borderBottom: '1px solid #f3f4f6' }}>
           <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search by name, email or employee ID..." style={{ width: '100%', padding: '8px 12px', border: '1px solid #e5e7eb', borderRadius: '6px', fontSize: '13px', outline: 'none', boxSizing: 'border-box', background: '#f9fafb' }} />
         </div>
         <div style={{ overflowY: 'auto', flex: 1 }}>
           <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px' }}>
             <thead>
               <tr>{['Name', 'Email', 'Employee ID', 'Role', 'Status'].map(h => (
-                <th key={h} style={{ textAlign: 'left', padding: '10px 20px', fontSize: '11px', fontWeight: '600', letterSpacing: '0.08em', textTransform: 'uppercase', color: '#9ca3af', borderBottom: '1px solid #e5e7eb', whiteSpace: 'nowrap' }}>{h}</th>
+                <th key={h} style={{ textAlign: 'left', padding: '7px 14px', fontSize: '11px', fontWeight: '600', letterSpacing: '0.08em', textTransform: 'uppercase', color: '#9ca3af', borderBottom: '1px solid #e5e7eb', whiteSpace: 'nowrap' }}>{h}</th>
               ))}</tr>
             </thead>
             <tbody>
@@ -161,18 +164,18 @@ function UsersTab({ token }) {
                   <tr key={u.id} onClick={() => selectUser(u)} style={{ cursor: 'pointer', background: active ? '#f0fdf9' : 'transparent' }}
                     onMouseEnter={e => { if (!active) e.currentTarget.style.background = '#f9fafb' }}
                     onMouseLeave={e => { if (!active) e.currentTarget.style.background = 'transparent' }}>
-                    <td style={{ padding: '12px 20px', borderBottom: '1px solid #f3f4f6', fontWeight: '500', color: '#111827' }}>
+                    <td style={{ padding: '7px 14px', borderBottom: '1px solid #f3f4f6', fontWeight: '500', color: '#111827' }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                         <div style={{ width: '28px', height: '28px', borderRadius: '50%', background: '#00c896', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '11px', fontWeight: '700', color: '#fff', flexShrink: 0 }}>{u.Name?.charAt(0) || '?'}</div>
                         {u.Name}
                       </div>
                     </td>
-                    <td style={{ padding: '12px 20px', borderBottom: '1px solid #f3f4f6', color: '#6b7280' }}>{u.Email}</td>
-                    <td style={{ padding: '12px 20px', borderBottom: '1px solid #f3f4f6', color: '#6b7280', fontFamily: 'monospace' }}>{u.EmployeeID}</td>
-                    <td style={{ padding: '12px 20px', borderBottom: '1px solid #f3f4f6' }}>
+                    <td style={{ padding: '7px 14px', borderBottom: '1px solid #f3f4f6', color: '#6b7280' }}>{u.Email}</td>
+                    <td style={{ padding: '7px 14px', borderBottom: '1px solid #f3f4f6', color: '#6b7280', fontFamily: 'monospace' }}>{u.EmployeeID}</td>
+                    <td style={{ padding: '7px 14px', borderBottom: '1px solid #f3f4f6' }}>
                       <span style={{ fontSize: '11px', fontWeight: '600', padding: '2px 8px', borderRadius: '20px', background: '#f3f4f6', color: '#374151' }}>{u.Role}</span>
                     </td>
-                    <td style={{ padding: '12px 20px', borderBottom: '1px solid #f3f4f6' }}>
+                    <td style={{ padding: '7px 14px', borderBottom: '1px solid #f3f4f6' }}>
                       <span style={{ fontSize: '11px', fontWeight: '600', padding: '2px 8px', borderRadius: '20px', background: u.Status ? '#f0fdf9' : '#fef2f2', color: u.Status ? '#00c896' : '#ef4444' }}>{u.Status ? 'Active' : 'Inactive'}</span>
                     </td>
                   </tr>
@@ -292,7 +295,7 @@ function SitesTab({ token }) {
   const panelOpen = selected || isNew
 
   return (
-    <div style={{ display: 'flex', gap: '20px', height: 'calc(100vh - 200px)' }}>
+    <div style={{ display: 'flex', gap: '20px', height: '100%' }}>
       <div style={{ flex: 1, background: '#fff', border: '1px solid #e5e7eb', borderRadius: '8px', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
         <div style={{ padding: '16px 20px', borderBottom: '1px solid #e5e7eb', display: 'flex', alignItems: 'center' }}>
           <div style={{ fontSize: '15px', fontWeight: '600', color: '#111827', flex: 1 }}>Sites</div>
@@ -303,7 +306,7 @@ function SitesTab({ token }) {
           <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px' }}>
             <thead>
               <tr>{['Site Name', 'Timezone', 'Status'].map(h => (
-                <th key={h} style={{ textAlign: 'left', padding: '10px 20px', fontSize: '11px', fontWeight: '600', letterSpacing: '0.08em', textTransform: 'uppercase', color: '#9ca3af', borderBottom: '1px solid #e5e7eb' }}>{h}</th>
+                <th key={h} style={{ textAlign: 'left', padding: '7px 14px', fontSize: '11px', fontWeight: '600', letterSpacing: '0.08em', textTransform: 'uppercase', color: '#9ca3af', borderBottom: '1px solid #e5e7eb' }}>{h}</th>
               ))}</tr>
             </thead>
             <tbody>
@@ -314,9 +317,9 @@ function SitesTab({ token }) {
                     style={{ cursor: 'pointer', background: active ? '#f0fdf9' : 'transparent' }}
                     onMouseEnter={e => { if (!active) e.currentTarget.style.background = '#f9fafb' }}
                     onMouseLeave={e => { if (!active) e.currentTarget.style.background = 'transparent' }}>
-                    <td style={{ padding: '12px 20px', borderBottom: '1px solid #f3f4f6', fontWeight: '500', color: '#111827' }}>{s.Name}</td>
-                    <td style={{ padding: '12px 20px', borderBottom: '1px solid #f3f4f6', color: '#6b7280', fontFamily: 'monospace' }}>{s.TimeZone}</td>
-                    <td style={{ padding: '12px 20px', borderBottom: '1px solid #f3f4f6' }}>
+                    <td style={{ padding: '7px 14px', borderBottom: '1px solid #f3f4f6', fontWeight: '500', color: '#111827' }}>{s.Name}</td>
+                    <td style={{ padding: '7px 14px', borderBottom: '1px solid #f3f4f6', color: '#6b7280', fontFamily: 'monospace' }}>{s.TimeZone}</td>
+                    <td style={{ padding: '7px 14px', borderBottom: '1px solid #f3f4f6' }}>
                       <span style={{ fontSize: '11px', fontWeight: '600', padding: '2px 8px', borderRadius: '20px', background: s.Status ? '#f0fdf9' : '#fef2f2', color: s.Status ? '#00c896' : '#ef4444' }}>{s.Status ? 'Active' : 'Inactive'}</span>
                     </td>
                   </tr>
@@ -421,7 +424,7 @@ function BuildingsTab({ token }) {
   const getScheduleName = (id) => schedules.find(s => s.id === parseInt(id))?.Name || '—'
 
   return (
-    <div style={{ display: 'flex', gap: '20px', height: 'calc(100vh - 200px)' }}>
+    <div style={{ display: 'flex', gap: '20px', height: '100%' }}>
       <div style={{ flex: 1, background: '#fff', border: '1px solid #e5e7eb', borderRadius: '8px', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
         <div style={{ padding: '16px 20px', borderBottom: '1px solid #e5e7eb', display: 'flex', alignItems: 'center' }}>
           <div style={{ fontSize: '15px', fontWeight: '600', color: '#111827', flex: 1 }}>Buildings</div>
@@ -432,7 +435,7 @@ function BuildingsTab({ token }) {
           <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px' }}>
             <thead>
               <tr>{['Building Name', 'Site', 'Shift Schedule', 'Multi-Staffing', 'Status'].map(h => (
-                <th key={h} style={{ textAlign: 'left', padding: '10px 20px', fontSize: '11px', fontWeight: '600', letterSpacing: '0.08em', textTransform: 'uppercase', color: '#9ca3af', borderBottom: '1px solid #e5e7eb' }}>{h}</th>
+                <th key={h} style={{ textAlign: 'left', padding: '7px 14px', fontSize: '11px', fontWeight: '600', letterSpacing: '0.08em', textTransform: 'uppercase', color: '#9ca3af', borderBottom: '1px solid #e5e7eb' }}>{h}</th>
               ))}</tr>
             </thead>
             <tbody>
@@ -443,15 +446,15 @@ function BuildingsTab({ token }) {
                     style={{ cursor: 'pointer', background: active ? '#f0fdf9' : 'transparent' }}
                     onMouseEnter={e => { if (!active) e.currentTarget.style.background = '#f9fafb' }}
                     onMouseLeave={e => { if (!active) e.currentTarget.style.background = 'transparent' }}>
-                    <td style={{ padding: '12px 20px', borderBottom: '1px solid #f3f4f6', fontWeight: '500', color: '#111827' }}>{b.Name}</td>
-                    <td style={{ padding: '12px 20px', borderBottom: '1px solid #f3f4f6', color: '#6b7280' }}>{getSiteName(b.Site)}</td>
-                    <td style={{ padding: '12px 20px', borderBottom: '1px solid #f3f4f6', color: '#6b7280' }}>
+                    <td style={{ padding: '7px 14px', borderBottom: '1px solid #f3f4f6', fontWeight: '500', color: '#111827' }}>{b.Name}</td>
+                    <td style={{ padding: '7px 14px', borderBottom: '1px solid #f3f4f6', color: '#6b7280' }}>{getSiteName(b.Site)}</td>
+                    <td style={{ padding: '7px 14px', borderBottom: '1px solid #f3f4f6', color: '#6b7280' }}>
                       {b.ShiftScheduleID ? getScheduleName(b.ShiftScheduleID) : <span style={{ color: '#d1d5db' }}>—</span>}
                     </td>
-                    <td style={{ padding: '12px 20px', borderBottom: '1px solid #f3f4f6' }}>
+                    <td style={{ padding: '7px 14px', borderBottom: '1px solid #f3f4f6' }}>
                       <span style={{ fontSize: '11px', fontWeight: '600', padding: '2px 8px', borderRadius: '20px', background: b.MultiStaffing ? '#eff6ff' : '#f3f4f6', color: b.MultiStaffing ? '#3b82f6' : '#6b7280' }}>{b.MultiStaffing ? 'Enabled' : 'Disabled'}</span>
                     </td>
-                    <td style={{ padding: '12px 20px', borderBottom: '1px solid #f3f4f6' }}>
+                    <td style={{ padding: '7px 14px', borderBottom: '1px solid #f3f4f6' }}>
                       <span style={{ fontSize: '11px', fontWeight: '600', padding: '2px 8px', borderRadius: '20px', background: b.Status ? '#f0fdf9' : '#fef2f2', color: b.Status ? '#00c896' : '#ef4444' }}>{b.Status ? 'Active' : 'Inactive'}</span>
                     </td>
                   </tr>
@@ -579,7 +582,7 @@ function ShiftsTab({ token }) {
   const formatTime = (t) => t ? t.slice(0, 5) : ''
 
   return (
-    <div style={{ display: 'flex', gap: '20px', height: 'calc(100vh - 200px)' }}>
+    <div style={{ display: 'flex', gap: '20px', height: '100%' }}>
 
       {/* Left — Schedule list */}
       <div style={{ width: '340px', background: '#fff', border: '1px solid #e5e7eb', borderRadius: '8px', overflow: 'hidden', display: 'flex', flexDirection: 'column', flexShrink: 0 }}>

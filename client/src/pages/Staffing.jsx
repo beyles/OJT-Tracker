@@ -109,6 +109,12 @@ export default function Staffing() {
   const [removing, setRemoving]   = useState(null)
   const [detailRec, setDetailRec] = useState(null)
 
+  const [showMatrix, setShowMatrix]       = useState(false)
+  const [matrixData, setMatrixData]       = useState(null)
+  const [matrixLoading, setMatrixLoading] = useState(false)
+  const [matrixMode, setMatrixMode]       = useState('ojt')
+  const [capturedAt, setCapturedAt]       = useState('')
+
   useEffect(() => {
     axios.get(`${API}/employees?limit=2000&active=true`, { headers })
       .then(r => setEmployees((r.data.data || []).map(e => ({ id: e.id, label: e.Name, sub: e.Number }))))
@@ -133,7 +139,7 @@ export default function Staffing() {
     setLines([]); setShifts([]); setLineId(''); setShiftId('')
     if (!buildingId) return
     axios.get(`${API}/staffing/context?siteId=${siteId}&buildingId=${buildingId}`, { headers })
-      .then(r => { setLines(r.data.lines || []); setShifts(r.data.shifts || []) })
+      .then(r => { setLines(r.data.lines || []); const s = r.data.shifts || []; setShifts(s); if (s.length) setShiftId(String(s[0].id)) })
       .catch(console.error)
   }, [buildingId])
 
@@ -215,6 +221,16 @@ export default function Staffing() {
     finally { setAssigning(false) }
   }
 
+  const loadMatrix = useCallback(async () => {
+    if (!lineId || !shiftId) return
+    setMatrixLoading(true)
+    try {
+      const r = await axios.get(`${API}/staffing/matrix?lineId=${lineId}&shiftId=${shiftId}&date=${date}`, { headers })
+      setMatrixData(r.data)
+    } catch (err) { console.error(err) }
+    finally { setMatrixLoading(false) }
+  }, [lineId, shiftId, date])
+
   const handleRemove = async (recordId) => {
     setRemoving(recordId)
     try {
@@ -267,6 +283,23 @@ export default function Staffing() {
 
   return (
     <Layout title="Staffing">
+      {showMatrix ? (
+        <MatrixView
+          data={matrixData}
+          loading={matrixLoading}
+          mode={matrixMode}
+          onModeChange={setMatrixMode}
+          onBack={() => setShowMatrix(false)}
+          capturedAt={capturedAt}
+          onRefresh={() => {
+            const now = new Date()
+            const d = now.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })
+            const t = now.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true })
+            setCapturedAt(`${d} ${t}`)
+            loadMatrix()
+          }}
+        />
+      ) : (
       <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
 
         {/* TOP BAR */}
@@ -282,12 +315,24 @@ export default function Staffing() {
           <ContextSelect label="Site"     value={siteId}     onChange={setSiteId}     disabled={false}       options={sites}     fullWidth={isMobile} />
           <ContextSelect label="Building" value={buildingId} onChange={setBuildingId} disabled={!siteId}     options={buildings} fullWidth={isMobile} />
           <ContextSelect label="Line"     value={lineId}     onChange={setLineId}     disabled={!buildingId} options={lines}     fullWidth={isMobile} />
-          <ContextSelect label="Shift"    value={shiftId}    onChange={setShiftId}    disabled={!buildingId} options={shifts}    allLabel="All Shifts" fullWidth={isMobile} />
+          <ContextSelect label="Shift"    value={shiftId}    onChange={setShiftId}    disabled={!buildingId} options={shifts}    fullWidth={isMobile} />
           <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginLeft: isMobile ? 0 : 'auto', width: isMobile ? '100%' : undefined }}>
             <span style={{ fontSize: '11px', fontWeight: '700', color: '#6b7280', textTransform: 'uppercase', flexShrink: 0 }}>Date</span>
             <input type="date" value={date} onChange={e => setDate(e.target.value)}
               style={{ ...selectStyle, flex: isMobile ? 1 : undefined }} />
           </div>
+          <button
+            onClick={() => {
+              const now = new Date()
+              const d = now.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })
+              const t = now.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true })
+              setCapturedAt(`${d} ${t}`)
+              loadMatrix()
+              setShowMatrix(true)
+            }}
+            disabled={!lineId || !shiftId}
+            style={{ ...btnStyle, background: lineId && shiftId ? '#4f46e5' : '#e5e7eb', color: lineId && shiftId ? '#fff' : '#9ca3af', padding: '5px 14px', flexShrink: 0 }}
+          >Matrix Report</button>
         </div>
 
         {/* KPI BAR */}
@@ -506,9 +551,10 @@ export default function Staffing() {
           )}
         </div>
       </div>
+      )}
 
       {/* EMPLOYEE DETAIL PANEL */}
-      {detailRec && (
+      {!showMatrix && detailRec && (
         <div style={{
           position: 'fixed',
           top: '56px',
@@ -583,7 +629,7 @@ function PanelRow({ label, children }) {
   )
 }
 
-function ContextSelect({ label, value, onChange, disabled, options, allLabel, fullWidth }) {
+function ContextSelect({ label, value, onChange, disabled, options, fullWidth }) {
   return (
     <div style={{ display: 'flex', alignItems: 'center', gap: '6px', width: fullWidth ? '100%' : undefined }}>
       <span style={{ fontSize: '11px', fontWeight: '700', color: '#6b7280', textTransform: 'uppercase', whiteSpace: 'nowrap' }}>
@@ -595,9 +641,219 @@ function ContextSelect({ label, value, onChange, disabled, options, allLabel, fu
         disabled={disabled}
         style={{ ...selectStyle, flex: fullWidth ? 1 : undefined, opacity: disabled ? 0.45 : 1, cursor: disabled ? 'not-allowed' : 'pointer' }}
       >
-        <option value="">{allLabel || '— Select —'}</option>
+        <option value="">— Select —</option>
         {options.map(o => { const oid = o.id ?? o.ID; return <option key={oid} value={oid}>{o.Name || o.name}</option> })}
       </select>
+    </div>
+  )
+}
+
+function matrixCellInfo(wsData, mode) {
+  const { assigned, cert, ojt, mpi } = wsData
+  if (mode === 'ojt') {
+    if (cert === 'certified')
+      return assigned ? { bg: '#16a34a', content: '✓', color: '#fff' } : { bg: '#bbf7d0', content: 'C', color: '#15803d' }
+    if (ojt != null)
+      return assigned ? { bg: '#ca8a04', content: `${ojt}%`, color: '#fff' } : { bg: '#fef08a', content: `${ojt}%`, color: '#a16207' }
+    if (assigned) return { bg: '#dc2626', content: '—', color: '#fff' }
+    return { bg: 'transparent', content: null }
+  }
+  if (mpi === 'current')
+    return assigned ? { bg: '#16a34a', content: '✓', color: '#fff' } : { bg: '#bbf7d0', content: 'C', color: '#15803d' }
+  if (mpi === 'outdated')
+    return assigned ? { bg: '#dc2626', content: '!', color: '#fff' } : { bg: '#fef08a', content: '!', color: '#a16207' }
+  if (assigned) return { bg: '#dc2626', content: '—', color: '#fff' }
+  return { bg: 'transparent', content: null }
+}
+
+function MatrixView({ data, loading, mode, onModeChange, onBack, capturedAt, onRefresh }) {
+  if (loading && !data) {
+    return (
+      <>
+        <style>{`@keyframes _mspin{to{transform:rotate(360deg)}} ._mspin{animation:_mspin .7s linear infinite}`}</style>
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '400px', gap: '14px' }}>
+          <div className="_mspin" style={{ width: 32, height: 32, border: '3px solid #e5e7eb', borderTopColor: '#4f46e5', borderRadius: '50%' }} />
+          <span style={{ color: '#9ca3af', fontSize: '13px' }}>Loading matrix…</span>
+        </div>
+      </>
+    )
+  }
+  if (!data) return null
+
+  const COL_W = 90
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', height: 'calc(100vh - 80px)', background: '#fff', border: '1px solid #e5e7eb', borderRadius: '8px', overflow: 'hidden' }}>
+      {/* Header */}
+      <div style={{ padding: '10px 16px', borderBottom: '1px solid #e5e7eb', display: 'flex', alignItems: 'center', gap: '12px', flexShrink: 0 }}>
+        <button
+          onClick={onBack}
+          style={{ padding: '5px 12px', borderRadius: '6px', border: 'none', cursor: 'pointer', fontSize: '12px', fontWeight: '600', background: '#f3f4f6', color: '#374151' }}
+        >← Back</button>
+        <button
+          onClick={onRefresh}
+          disabled={loading}
+          style={{ padding: '5px 12px', borderRadius: '6px', border: 'none', fontSize: '12px', fontWeight: '600', background: '#f3f4f6', color: loading ? '#9ca3af' : '#374151', cursor: loading ? 'not-allowed' : 'pointer', opacity: loading ? 0.7 : 1 }}
+        >{loading ? '⟳ Refreshing…' : '⟳ Refresh'}</button>
+        <div style={{ flex: 1, textAlign: 'center' }}>
+          <span style={{ fontWeight: '700', fontSize: '14px', color: '#111827' }}>{data.lineName} — {data.shiftName}</span>
+          {capturedAt && <span style={{ fontSize: '12px', color: '#6b7280', marginLeft: '8px' }}>| {capturedAt}</span>}
+        </div>
+        <select
+          value={mode}
+          onChange={e => onModeChange(e.target.value)}
+          style={{ padding: '5px 10px', border: '1px solid #e5e7eb', borderRadius: '6px', fontSize: '12px', color: '#111827', background: '#fff', cursor: 'pointer' }}
+        >
+          <option value="ojt">OJT & Certification</option>
+          <option value="mpi">MPI Reading</option>
+        </select>
+      </div>
+
+      {/* Scrollable table area */}
+      <div style={{ flex: 1, overflow: 'auto' }}>
+        {data.employees.length === 0 ? (
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '200px', color: '#9ca3af', fontSize: '14px' }}>
+            No employees staffed on this line for this shift and date
+          </div>
+        ) : (
+          <table style={{ borderCollapse: 'separate', borderSpacing: 0, fontSize: '12px' }}>
+            <thead>
+              <tr>
+                <th style={{
+                  position: 'sticky', top: 0, left: 0, zIndex: 30,
+                  background: '#f9fafb', minWidth: 180,
+                  padding: '7px 12px', textAlign: 'left',
+                  fontWeight: '700', fontSize: '11px', color: '#6b7280',
+                  textTransform: 'uppercase', letterSpacing: '0.05em', whiteSpace: 'nowrap',
+                  borderRight: '2px solid #e5e7eb', borderBottom: '2px solid #e5e7eb'
+                }}>Employee</th>
+                {data.workstations.map(ws => (
+                  <th key={ws.id} style={{
+                    position: 'sticky', top: 0, zIndex: 20,
+                    background: '#f9fafb', width: COL_W, minWidth: COL_W,
+                    padding: '4px 4px', textAlign: 'center',
+                    fontWeight: '700', fontSize: '10px', color: '#6b7280',
+                    textTransform: 'uppercase', letterSpacing: '0.03em',
+                    whiteSpace: 'normal', lineHeight: 1.2, wordBreak: 'break-word',
+                    borderRight: '1px solid #e5e7eb', borderBottom: '2px solid #e5e7eb'
+                  }}>
+                    {ws.isCritical && (
+                      <div style={{ fontSize: '8px', fontWeight: '800', color: '#ef4444', letterSpacing: '0.06em', marginBottom: '2px' }}>CRITICAL</div>
+                    )}
+                    {ws.name}
+                  </th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {data.employees.map((emp, rowIdx) => {
+                const rowBg = rowIdx % 2 === 0 ? '#fff' : '#f9fafb'
+                return (
+                  <tr key={emp.id}>
+                    <td style={{
+                      position: 'sticky', left: 0, zIndex: 10, background: rowBg,
+                      padding: '5px 10px', minWidth: 180,
+                      borderRight: '2px solid #e5e7eb', borderBottom: '1px solid #f3f4f6'
+                    }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '7px' }}>
+                        <PhotoCircle empId={emp.id} name={emp.name} size={24} />
+                        <div style={{ minWidth: 0 }}>
+                          <div style={{ fontSize: '12px', fontWeight: '600', color: '#111827', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: 120 }}>{emp.name}</div>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '4px', flexWrap: 'wrap' }}>
+                            <span style={{ fontSize: '10px', color: '#9ca3af' }}>#{emp.number}</span>
+                            {emp.isTrainer && (
+                              <span style={{ fontSize: '9px', fontWeight: '800', padding: '0 4px', borderRadius: '3px', background: '#e6faf5', color: '#059669', letterSpacing: '0.04em' }}>TRAINER</span>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    </td>
+                    {data.workstations.map(ws => {
+                      const wsData = emp.workstations[ws.id] || { assigned: false, cert: 'none', ojt: null, mpi: 'none' }
+                      const cell = matrixCellInfo(wsData, mode)
+                      return (
+                        <td key={ws.id} style={{
+                          background: cell.bg, padding: 0,
+                          width: COL_W, minWidth: COL_W,
+                          borderRight: '1px solid rgba(229,231,235,0.6)',
+                          borderBottom: '1px solid #f3f4f6',
+                          textAlign: 'center', verticalAlign: 'middle',
+                          boxShadow: wsData.assigned ? 'inset 0 0 0 3px #111827' : undefined
+                        }}>
+                          {cell.content && (
+                            <div style={{ padding: '5px 2px', fontSize: '11px', fontWeight: '700', color: cell.color, lineHeight: 1 }}>
+                              {cell.content}
+                            </div>
+                          )}
+                        </td>
+                      )
+                    })}
+                  </tr>
+                )
+              })}
+            </tbody>
+          </table>
+        )}
+        <MatrixTotals data={data} mode={mode} />
+      </div>
+    </div>
+  )
+}
+
+function TotalsCard({ label, value, color }) {
+  return (
+    <div style={{
+      background: '#fff', border: '1px solid #e5e7eb', borderRadius: '8px',
+      padding: '8px 14px', display: 'flex', flexDirection: 'column', gap: '2px',
+      minWidth: 130
+    }}>
+      <div style={{ fontSize: '20px', fontWeight: '800', color, lineHeight: 1 }}>{value}</div>
+      <div style={{ fontSize: '10px', color: '#6b7280', lineHeight: 1.3, maxWidth: 200 }}>{label}</div>
+    </div>
+  )
+}
+
+function MatrixTotals({ data, mode }) {
+  const allAssigned = []
+  data.employees.forEach(emp => {
+    data.workstations.forEach(ws => {
+      const d = emp.workstations[ws.id] || { assigned: false, cert: 'none', ojt: null, mpi: 'none' }
+      if (d.assigned) allAssigned.push({ empId: emp.id, cert: d.cert, ojt: d.ojt, mpi: d.mpi, hasMpi: ws.hasMpi })
+    })
+  })
+  const total = allAssigned.length
+  if (total === 0) return null
+
+  if (mode === 'ojt') {
+    const certified  = allAssigned.filter(c => c.cert === 'certified').length
+    const inTraining = allAssigned.filter(c => c.cert !== 'certified' && c.ojt != null).length
+    const noTraining = allAssigned.filter(c => c.cert !== 'certified' && c.ojt == null).length
+    const needCount  = new Set(allAssigned.filter(c => c.cert !== 'certified').map(c => c.empId)).size
+    const pctCert  = Math.round(certified  / total * 100)
+    const pctTrain = Math.round(inTraining / total * 100)
+    return (
+      <div style={{ display: 'flex', gap: '8px', padding: '10px 14px', borderTop: '1px solid #e5e7eb', flexWrap: 'wrap', background: '#f9fafb', flexShrink: 0 }}>
+        <TotalsCard label="Working & Certified" value={`${pctCert}%`} color={pctCert === 100 ? '#16a34a' : pctCert >= 70 ? '#ca8a04' : '#dc2626'} />
+        <TotalsCard label="Working & In Training" value={`${pctTrain}%`} color={pctTrain > 0 ? '#ca8a04' : '#9ca3af'} />
+        <TotalsCard label="Working Without Training" value={noTraining} color={noTraining === 0 ? '#16a34a' : '#dc2626'} />
+        <TotalsCard label="Needs Training Today" value={needCount} color={needCount === 0 ? '#16a34a' : '#dc2626'} />
+      </div>
+    )
+  }
+
+  const mpiCells    = allAssigned.filter(c => c.hasMpi)
+  const totalMpi    = mpiCells.length
+  const mpiCurrent  = mpiCells.filter(c => c.mpi === 'current').length
+  const pctMpi      = totalMpi ? Math.round(mpiCurrent / totalMpi * 100) : null
+  const needMpiEmps = new Set(mpiCells.filter(c => c.mpi !== 'current').map(c => c.empId)).size
+  return (
+    <div style={{ display: 'flex', gap: '8px', padding: '10px 14px', borderTop: '1px solid #e5e7eb', flexWrap: 'wrap', background: '#f9fafb', flexShrink: 0 }}>
+      <TotalsCard
+        label="% Operators Up to Date on MPI"
+        value={pctMpi !== null ? `${pctMpi}%` : 'N/A'}
+        color={pctMpi === 100 ? '#16a34a' : pctMpi !== null && pctMpi >= 70 ? '#ca8a04' : '#dc2626'}
+      />
+      <TotalsCard label="Operators Needing MPI Reading" value={needMpiEmps} color={needMpiEmps === 0 ? '#16a34a' : '#dc2626'} />
     </div>
   )
 }

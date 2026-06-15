@@ -222,7 +222,7 @@ export default function EmployeeRecords() {
 
   return (
     <Layout title="Training Records" subtitle="Full training history by employee">
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', height: isMobileOrTablet ? 'auto' : 'calc(100vh - 56px - 56px)', minHeight: 0 }}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', flex: isMobileOrTablet ? undefined : 1, minHeight: 0 }}>
 
         {/* Employee selector card */}
         <div style={{ background: '#fff', border: '1px solid #e5e7eb', borderRadius: '10px', padding: '20px', flexShrink: 0 }}>

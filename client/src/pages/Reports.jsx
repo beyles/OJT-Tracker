@@ -91,7 +91,7 @@ export default function Reports() {
 
   return (
     <Layout title="Reports">
-      <div style={{ display: 'flex', gap: '0', height: 'calc(100vh - 112px)', background: '#fff', border: '1px solid #e5e7eb', borderRadius: '8px', overflow: 'hidden' }}>
+      <div style={{ display: 'flex', gap: '0', flex: 1, minHeight: 0, background: '#fff', border: '1px solid #e5e7eb', borderRadius: '8px', overflow: 'hidden' }}>
 
         {/* LEFT PANEL — report list */}
         <div style={{ width: '280px', flexShrink: 0, borderRight: '1px solid #e5e7eb', overflowY: 'auto', background: '#f9fafb' }}>

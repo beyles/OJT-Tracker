@@ -14,6 +14,7 @@ import Reports from './pages/Reports'
 import SelfTraining from './pages/SelfTraining'
 import MyProfile from './pages/MyProfile'
 import About from './pages/About'
+import Matrices from './pages/Matrices'
 
 function PrivateRoute({ children }) {
   const { token } = useAuth()
@@ -38,6 +39,7 @@ function AppRoutes() {
       <Route path="/self-training" element={<PrivateRoute><SelfTraining /></PrivateRoute>} />
       <Route path="/my-profile"   element={<PrivateRoute><MyProfile /></PrivateRoute>} />
       <Route path="/about"        element={<PrivateRoute><About /></PrivateRoute>} />
+      <Route path="/matrices"     element={<PrivateRoute><Matrices /></PrivateRoute>} />
       <Route path="*" element={<Navigate to={token ? "/dashboard" : "/login"} />} />
     </Routes>
   )

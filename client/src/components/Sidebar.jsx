@@ -1,20 +1,26 @@
 import { useState } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
+import {
+  LayoutDashboard, Users, ClipboardList, BadgeCheck, FileText,
+  BookOpen, BookMarked, Settings, UsersRound, GraduationCap, Grid3x3, BarChart2,
+  ChevronLeft, ChevronRight
+} from 'lucide-react'
 
 const menuItems = [
-  { label: 'Dashboard', icon: '📊', path: '/dashboard', roles: ['sysadmin', 'trainingadmin', 'trainer', 'operator'] },
-  { label: 'Staffing', icon: '👷', path: '/staffing', roles: ['sysadmin', 'trainingadmin', 'trainer', 'operator'] },
-  { label: 'OJT', icon: '📝', path: '/ojt', roles: ['sysadmin', 'trainingadmin', 'trainer'] },
-  { label: 'Certifications', icon: '🎓', path: '/certifications', roles: ['sysadmin', 'trainingadmin', 'trainer'] },
-  { label: 'MPI Records',      icon: '📄', path: '/mpi-records',      roles: ['sysadmin', 'trainingadmin', 'trainer'] },
-  { label: 'Self Training',   icon: '📖', path: '/self-training',    roles: ['sysadmin', 'trainingadmin', 'trainer', 'operator'] },
-  { label: 'Training Records', icon: '🗂️', path: '/employee-records', roles: ['sysadmin', 'trainingadmin', 'trainer'] },
-  { label: 'System Admin', icon: '🖥️', path: '/system-admin', roles: ['sysadmin'] },
-  { label: 'Employees', icon: '👥', path: '/employees', roles: ['sysadmin'] },
-  { label: 'Training Admin', icon: '📋', path: '/training-admin', roles: ['sysadmin', 'trainingadmin'] },
-  { label: 'Reports', icon: '📈', path: '/reports', roles: ['sysadmin', 'trainingadmin', 'trainer'] },
-  { label: 'My Progress', icon: '⭐', path: '/my-progress', roles: ['operator'] },
+  { label: 'Dashboard',        icon: LayoutDashboard, path: '/dashboard',      roles: ['sysadmin', 'trainingadmin', 'trainer', 'operator'] },
+  { label: 'Staffing',         icon: Users,           path: '/staffing',        roles: ['sysadmin', 'trainingadmin', 'trainer', 'operator'] },
+  { label: 'OJT',              icon: ClipboardList,   path: '/ojt',             roles: ['sysadmin', 'trainingadmin', 'trainer'] },
+  { label: 'Certifications',   icon: BadgeCheck,      path: '/certifications',  roles: ['sysadmin', 'trainingadmin', 'trainer'] },
+  { label: 'Document Records', icon: FileText,        path: '/mpi-records',     roles: ['sysadmin', 'trainingadmin', 'trainer'] },
+  { label: 'Self Training',    icon: BookOpen,        path: '/self-training',   roles: ['sysadmin', 'trainingadmin', 'trainer', 'operator'] },
+  { label: 'Training Records', icon: BookMarked,      path: '/employee-records', roles: ['sysadmin', 'trainingadmin', 'trainer'] },
+  { label: 'System Admin',     icon: Settings,        path: '/system-admin',    roles: ['sysadmin'] },
+  { label: 'Employees',        icon: UsersRound,      path: '/employees',       roles: ['sysadmin'] },
+  { label: 'Training Admin',   icon: GraduationCap,   path: '/training-admin',  roles: ['sysadmin', 'trainingadmin'] },
+  { label: 'Matrices',         icon: Grid3x3,         path: '/matrices',        roles: ['sysadmin', 'trainingadmin'] },
+  { label: 'Reports',          icon: BarChart2,       path: '/reports',         roles: ['sysadmin', 'trainingadmin', 'trainer'] },
+  { label: 'My Progress',      icon: BarChart2,       path: '/my-progress',     roles: ['operator'] },
 ]
 
 export default function Sidebar() {
@@ -56,9 +62,10 @@ export default function Sidebar() {
       </div>
 
       {/* Nav items */}
-      <div style={{ flex: 1, paddingTop: '12px' }}>
+      <div style={{ flex: 1, paddingTop: '12px', overflowY: 'auto', overflowX: 'hidden' }}>
         {filtered.map(item => {
           const active = location.pathname === item.path
+          const Icon = item.icon
           return (
             <div
               key={item.path}
@@ -82,13 +89,10 @@ export default function Sidebar() {
               onMouseEnter={e => { if (!active) e.currentTarget.style.background = '#e9eaec' }}
               onMouseLeave={e => { if (!active) e.currentTarget.style.background = 'transparent' }}
             >
-              <span style={{
-                fontSize: '16px',
-                flexShrink: 0,
-                filter: active ? 'grayscale(0%) opacity(1)' : 'grayscale(100%) opacity(0.6)'
-              }}>
-                {item.icon}
-              </span>
+              <Icon
+                size={18}
+                style={{ flexShrink: 0, opacity: active ? 1 : 0.6 }}
+              />
               {!collapsed && item.label}
             </div>
           )
@@ -110,8 +114,10 @@ export default function Sidebar() {
         onMouseEnter={e => e.currentTarget.style.background = '#e9eaec'}
         onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
       >
-        <span style={{ fontSize: '16px' }}>{collapsed ? '»' : '«'}</span>
-        {!collapsed && 'Collapse Menu'}
+        {collapsed
+          ? <ChevronRight size={18} style={{ flexShrink: 0 }} />
+          : <><ChevronLeft size={18} style={{ flexShrink: 0 }} />Collapse Menu</>
+        }
       </div>
     </div>
   )

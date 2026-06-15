@@ -106,7 +106,7 @@ export default function Certifications() {
 
   return (
     <Layout title="Certifications" subtitle="Operator certification records">
-      <div style={{ display: 'flex', flexDirection: isMobileOrTablet ? 'column' : 'row', gap: '24px', height: isMobileOrTablet ? 'auto' : 'calc(100vh - 56px - 56px)', minHeight: 0 }}>
+      <div style={{ display: 'flex', flexDirection: isMobileOrTablet ? 'column' : 'row', gap: '24px', flex: isMobileOrTablet ? undefined : 1, minHeight: 0 }}>
 
         {/* ── LEFT PANEL ─────────────────────────────────── */}
         <div style={{
